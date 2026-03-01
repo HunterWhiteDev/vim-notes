@@ -1,0 +1,23 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "API for vim-notes",
+  "license": "ISC",
+  "author": "HunterWhite",
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "test": "npm run dev",
+    "dev": "tsx --watch index.ts"
+  },
+  "dependencies": {
+    "@types/cors": "^2.8.19",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.3.3"
+  }
+}
