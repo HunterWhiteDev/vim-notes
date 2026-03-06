@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Editor from "./screens/Editor";
 import FileExplorer from "./screens/FileExplorer";
 import api from "./axios";
+import _debounce from "lodash/debounce";
 
 function App() {
   const editorRef = useRef(null);
@@ -11,10 +12,7 @@ function App() {
   const [, forceRerender] = useState(0);
   const [fileNames, setFileNames] = useState([]);
   const [filesData, setFilesData] = useState([""]);
-
-  // const focusEditor = () => {
-  //   editorRef.current.focus();
-  // };
+  const filesCount = useRef(0);
 
   const handleKeyDown = (e) => {
     console.log({ e });
@@ -24,20 +22,27 @@ function App() {
 
     if (key === "j") {
       // setSelectedFileIdx((selectedFileIdx) => selectedFileIdx + 1);
-      selectedFileIdx.current++;
+
+      if (selectedFileIdx.current === filesCount.current - 1) {
+        selectedFileIdx.current = 0;
+      } else selectedFileIdx.current++;
       reRender = true;
     }
 
     if (key === "k") {
+      console.log({ selectedFileIdx: selectedFileIdx.current });
       // setSelectedFileIdx((selectedFileIdx) => selectedFileIdx - 1);
-      selectedFileIdx.current--;
+      if (selectedFileIdx.current === 0) {
+        console.log("condition met");
+        selectedFileIdx.current = filesCount.current - 1;
+      } else selectedFileIdx.current--;
+
       reRender = true;
     }
 
     console.log({ e });
     if (e.ctrlKey && key === "o") {
       e.preventDefault();
-      setIsSelecting(true);
     }
 
     if (key === "Enter") {
@@ -63,6 +68,7 @@ function App() {
       console.log({ response });
       setFileNames(response.data.fileNames);
       setFilesData(response.data.filesData);
+      filesCount.current = response.data.fileNames.length;
     };
 
     getData();
@@ -81,6 +87,10 @@ function App() {
     console.log(response);
   };
 
+  const debounceDataFn = useCallback(_debounce(handleFileDataChange, 500), [
+    fileNames,
+  ]);
+
   return (
     <div className="flex h-[100vh] bg-gray-900">
       <div className="w-[200px]">
@@ -94,7 +104,7 @@ function App() {
         <Editor
           editorRef={editorRef}
           fileData={filesData[selectedFileIdx.current]}
-          handleFileDataChange={handleFileDataChange}
+          handleFileDataChange={debounceDataFn}
         />
       </div>
     </div>
