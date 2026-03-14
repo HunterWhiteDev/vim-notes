@@ -1,9 +1,16 @@
-import { Request, Response } from "express";
+import { Request, response, Response } from "express";
 import fs from "fs";
-export default function postNote(req: Request, res: Response) {
+import db from "../../drizzle/drizzle";
+import { notesTable } from "../../drizzle/schema";
+export default async function postNote(req: Request, res: Response) {
   const { name } = req.params;
   const { fileData } = req.body;
 
-  fs.writeFileSync(`/home/flawda/.notes/${name}`, fileData);
+  const respone = await db
+    .insert(notesTable)
+    .values({ content: "" })
+    .returning({ id: notesTable.id });
+  console.log({ response });
+
   res.status(200).send({ success: true });
 }

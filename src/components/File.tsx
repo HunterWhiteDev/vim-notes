@@ -13,13 +13,13 @@ export default function File({
 }: FileProps) {
   return (
     <div
-      className={`cursor-pointer border-b-2 border-gray-500 p-2 text-white hover:bg-gray-700 ${openedFileIdx === idx ? "bg-gray-700" : null} ${
+      className={`cursor-pointer border-b-2 border-gray-500 p-1 text-sm text-white hover:bg-gray-700 ${openedFileIdx === idx ? "bg-gray-700" : null} ${
         selectedFileIdx === idx
           ? "border-b-4 border-t-4 !border-blue-500"
           : null
       } `}
     >
-      {file}
+      {file.content}
     </div>
   );
 }

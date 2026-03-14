@@ -1,29 +1,37 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import Editor from "./screens/Editor";
-import FileExplorer from "./screens/FileExplorer";
 import api from "./axios";
 import _debounce from "lodash/debounce";
-
+import Sidebar from "./screens/Sidebar";
+import { commandData } from "./components/CommandPallete";
 function App() {
   const editorRef = useRef(null);
 
   const [openedFileIdx, setOpenedFileIdx] = useState(0);
   const selectedFileIdx = useRef(0);
+  const selectedCommandIdx = useRef(0);
   const [, forceRerender] = useState(0);
   const [fileNames, setFileNames] = useState([]);
-  const [filesData, setFilesData] = useState([""]);
+  const [filesData, setFilesData] = useState([]);
   const filesCount = useRef(0);
   const mode = useRef(null);
-  const canUpdateMode = useRef(false);
 
-  const handleKeyDown = (e) => {
+  const showPallete = useRef(false);
+
+  const handleKeyDown = async (e) => {
     const key = e.key;
     console.log({ e });
 
     let reRender = false;
 
     if (key === "j") {
-      // setSelectedFileIdx((selectedFileIdx) => selectedFileIdx + 1);
+      if (showPallete.current) {
+        if (selectedCommandIdx.current === commandData.length - 1) {
+          selectedCommandIdx.current = 0;
+        } else selectedCommandIdx.current++;
+
+        return;
+      }
 
       if (selectedFileIdx.current === filesCount.current - 1) {
         selectedFileIdx.current = 0;
@@ -32,8 +40,14 @@ function App() {
     }
 
     if (key === "k") {
-      console.log({ selectedFileIdx: selectedFileIdx.current });
-      // setSelectedFileIdx((selectedFileIdx) => selectedFileIdx - 1);
+      if (showPallete.current) {
+        if (selectedCommandIdx.current === 0) {
+          selectedCommandIdx.current = commandData.length - 1;
+        } else selectedCommandIdx.current--;
+
+        return;
+      }
+
       if (selectedFileIdx.current === 0) {
         selectedFileIdx.current = filesCount.current - 1;
       } else selectedFileIdx.current--;
@@ -47,9 +61,23 @@ function App() {
       e.preventDefault();
     }
 
-    console.log(e.code, mode.current);
+    // if (key === "p") {
+    //   showPallete.current = !showPallete.current;
+    //   reRender = true;
+    // }
+
+    if (key === "n") {
+      const response = await api({ url: "/note", method: "post" });
+      if (response.status === 200) {
+        console.log("Done status 200");
+      }
+    }
 
     if (key === "Enter") {
+      if (showPallete.current) {
+        commandData[selectedCommandIdx.current].action();
+        return;
+      }
       setOpenedFileIdx(selectedFileIdx.current);
       editorRef.current.focus();
       reRender = true;
@@ -69,10 +97,8 @@ function App() {
   useEffect(() => {
     const getData = async () => {
       const response = await api({ url: "/notes", method: "get" });
-      console.log({ response });
-      setFileNames(response.data.fileNames);
-      setFilesData(response.data.filesData);
-      filesCount.current = response.data.fileNames.length;
+      console.log({ response: response.data.notes });
+      setFilesData(response.data.notes);
     };
 
     getData();
@@ -96,21 +122,22 @@ function App() {
   ]);
 
   return (
-    <div className="flex h-[100vh] bg-gray-900">
+    <div className="flex h-[100vh] bg-gray-900 text-white">
       <div className="w-[200px]">
-        <FileExplorer
+        <Sidebar
+          showPallete={showPallete.current}
           openedFileIdx={openedFileIdx}
           selectedFileIdx={selectedFileIdx.current}
-          files={fileNames}
+          files={filesData}
+          selectedCommandIdx={selectedCommandIdx.current}
         />
       </div>
       <div className="w-full">
         <Editor
           mode={mode}
           editorRef={editorRef}
-          fileData={filesData[selectedFileIdx.current]}
+          fileData={filesData[selectedFileIdx.current]?.content}
           handleFileDataChange={debounceDataFn}
-          canUpdateMode={canUpdateMode}
         />
       </div>
     </div>

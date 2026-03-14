@@ -1,15 +1,11 @@
 import { Request, Response } from "express";
-import fs from "fs";
+import db from "../../drizzle/drizzle";
+import { notesTable } from "../../drizzle/schema";
 
 export default async function (req: Request, res: Response) {
-  const files = fs.readdirSync("/home/flawda/.notes/");
-
-  const fileArr: string[] = [];
-
-  for (const file of files) {
-    const fileData = fs.readFileSync(`/home/flawda/.notes/${file}`, "utf-8");
-    fileArr.push(fileData);
-  }
-
-  res.status(200).send({ fileNames: files, filesData: fileArr });
+  const response = await db
+    .select({ id: notesTable.id, content: notesTable.content })
+    .from(notesTable);
+  console.log({ response });
+  res.status(200).send({ notes: response });
 }

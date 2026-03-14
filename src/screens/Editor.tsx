@@ -9,14 +9,12 @@ export default function Editor({
   mode,
   canUpdateMode,
 }) {
+  console.log({ fileData });
   const statusBarRef = useRef(null);
   const vimRef = useRef(null);
 
   function handleEditorDidMount(editor) {
     vimRef.current = initVimMode(editor, statusBarRef.current);
-    // vimRef.current.on("vim-mode-change", (e) => {
-    //   mode.current = e.mode;
-    // });
 
     editor.focus();
     editorRef.current = editor;

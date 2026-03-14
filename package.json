@@ -3,6 +3,7 @@
     "@monaco-editor/react": "^4.7.0",
     "axios": "^1.13.6",
     "lodash": "^4.17.23",
+    "lucide-react": "^0.577.0",
     "monaco-vim": "^0.4.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
