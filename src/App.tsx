@@ -13,10 +13,12 @@ function App() {
   const [fileNames, setFileNames] = useState([]);
   const [filesData, setFilesData] = useState([""]);
   const filesCount = useRef(0);
+  const mode = useRef(null);
+  const canUpdateMode = useRef(false);
 
   const handleKeyDown = (e) => {
-    console.log({ e });
     const key = e.key;
+    console.log({ e });
 
     let reRender = false;
 
@@ -33,7 +35,6 @@ function App() {
       console.log({ selectedFileIdx: selectedFileIdx.current });
       // setSelectedFileIdx((selectedFileIdx) => selectedFileIdx - 1);
       if (selectedFileIdx.current === 0) {
-        console.log("condition met");
         selectedFileIdx.current = filesCount.current - 1;
       } else selectedFileIdx.current--;
 
@@ -41,9 +42,12 @@ function App() {
     }
 
     console.log({ e });
-    if (e.ctrlKey && key === "o") {
+    if (e.altKey === true && key === "Escape") {
+      window.document.activeElement?.blur();
       e.preventDefault();
     }
+
+    console.log(e.code, mode.current);
 
     if (key === "Enter") {
       setOpenedFileIdx(selectedFileIdx.current);
@@ -102,9 +106,11 @@ function App() {
       </div>
       <div className="w-full">
         <Editor
+          mode={mode}
           editorRef={editorRef}
           fileData={filesData[selectedFileIdx.current]}
           handleFileDataChange={debounceDataFn}
+          canUpdateMode={canUpdateMode}
         />
       </div>
     </div>

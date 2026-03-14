@@ -2,29 +2,24 @@ import MonacoEditor from "@monaco-editor/react";
 import { initVimMode } from "monaco-vim";
 import { useRef } from "react";
 
-export default function Editor({ editorRef, fileData, handleFileDataChange }) {
+export default function Editor({
+  editorRef,
+  fileData,
+  handleFileDataChange,
+  mode,
+  canUpdateMode,
+}) {
   const statusBarRef = useRef(null);
   const vimRef = useRef(null);
-  const mode = useRef(null);
 
   function handleEditorDidMount(editor) {
     vimRef.current = initVimMode(editor, statusBarRef.current);
-    vimRef.current.on("vim-mode-change", (e) => {
-      mode.current = e.mode;
-    });
-
-    vimRef.current.on("vim-keypress", (e) => {
-      console.log({ e, c: mode.current });
-      if (mode.current === "normal" && e === "<C-o>") {
-        window.document.activeElement.blur();
-      }
-    });
+    // vimRef.current.on("vim-mode-change", (e) => {
+    //   mode.current = e.mode;
+    // });
 
     editor.focus();
     editorRef.current = editor;
-    // editor.onKeyDown((e) => {
-    //   console.log({ mode: mode.current, e });
-    // });
   }
 
   return (
