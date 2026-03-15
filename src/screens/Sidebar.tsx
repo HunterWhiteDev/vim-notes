@@ -7,6 +7,8 @@ export default function Sidebar({
   selectedFileIdx,
   files,
   selectedCommandIdx,
+  deleteFileIdx,
+  confirmingDelete,
 }) {
   return showPallete ? (
     <CommandPallete selectedFileIdx={selectedCommandIdx} />
@@ -15,6 +17,8 @@ export default function Sidebar({
       openedFileIdx={openedFileIdx}
       selectedFileIdx={selectedFileIdx}
       files={files}
+      deleteFileIdx={deleteFileIdx}
+      confirmingDelete={confirmingDelete}
     />
   );
 }

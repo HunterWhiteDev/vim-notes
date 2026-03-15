@@ -10,6 +10,8 @@ export default function FileExplorer({
   openedFileIdx,
   selectedFileIdx,
   files,
+  deleteFileIdx,
+  confirmingDelete,
 }: FileExplorerProps) {
   return (
     <div className="border-r-gr h-[100vh] border-r-2 text-white">
@@ -18,6 +20,8 @@ export default function FileExplorer({
       </div>
       {files.map((file, idx) => (
         <File
+          deleteFileIdx={deleteFileIdx}
+          confirmingDelete={confirmingDelete}
           openedFileIdx={openedFileIdx}
           idx={idx}
           selectedFileIdx={selectedFileIdx}
