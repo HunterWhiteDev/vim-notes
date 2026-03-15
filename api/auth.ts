@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import db from "./drizzle/drizzle"; // your drizzle instance
-import * as authSchema from "./drizzle/authSchema";
+import * as authSchema from "./drizzle/schema/authSchema";
 import * as dotenv from "dotenv";
 dotenv.config();
 

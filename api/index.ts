@@ -29,7 +29,7 @@ app.use(express.json());
 app.get("/notes", getNotes);
 
 //Routes for single note
-app.get("/note/:name", getNote);
+// app.get("/note/:name", getNote);
 app.post("/note", postNote);
 app.put("/note/:id", updateNote);
 app.delete("/note/:id", deleteNote);

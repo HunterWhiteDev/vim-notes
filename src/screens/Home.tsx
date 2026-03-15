@@ -155,7 +155,7 @@ function Home() {
     };
 
     getData();
-  }, []);
+  }, [session]);
 
   const handleFileDataChange = async (e: string) => {
     //TODO: Setup debounce in this function

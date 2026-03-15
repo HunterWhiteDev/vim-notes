@@ -1,11 +1,17 @@
 import { Request, Response } from "express";
 import fs from "fs";
 import db from "../../drizzle/drizzle";
-import { notesTable } from "../../drizzle/schema";
+import { notesTable } from "../../drizzle/schema/notes";
+import { auth } from "../../auth";
+import { fromNodeHeaders } from "better-auth/node";
 export default async function postNote(req: Request, res: Response) {
+  const session = await auth.api.getSession({
+    headers: fromNodeHeaders(req.headers),
+  });
+
   const response = await db
     .insert(notesTable)
-    .values({ content: "New Note" })
+    .values({ content: "New Note", user_id: session?.user.id })
     .returning({ id: notesTable.id, content: notesTable.content });
   console.log({ response });
 
