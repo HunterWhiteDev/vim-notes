@@ -4,6 +4,7 @@ import api from "../axios";
 import _debounce from "lodash/debounce";
 import Sidebar from "./Sidebar";
 import { commandData } from "../components/CommandPallete";
+import { useSession } from "@/lib/authClient";
 
 function Home() {
   const editorRef = useRef(null);
@@ -16,7 +17,9 @@ function Home() {
   const mode = useRef(null);
   const showPallete = useRef(false);
   const deleteFileIdx = useRef(-1);
-  const confirmingDelete = useRef(false);
+
+  const session = useSession();
+  console.log({ session });
 
   const handleKeyDown = async (e) => {
     const key = e.key;
