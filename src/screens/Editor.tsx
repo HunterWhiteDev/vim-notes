@@ -6,8 +6,6 @@ export default function Editor({
   editorRef,
   fileData,
   handleFileDataChange,
-  mode,
-  canUpdateMode,
 }) {
   console.log({ fileData });
   const statusBarRef = useRef(null);

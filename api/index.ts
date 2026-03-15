@@ -6,6 +6,8 @@ import getNote from "./routes/note/get";
 import postNote from "./routes/note/post";
 import updateNote from "./routes/note/update";
 import deleteNote from "./routes/note/delete";
+import { toNodeHandler } from "better-auth/node";
+import { auth } from "./auth";
 dotenv.config();
 
 const PORT = process.env.EXPRESS_PORT;
@@ -15,8 +17,11 @@ const app = express();
 app.use(
   cors({
     origin: VITE_ORIGIN,
+    credentials: true,
   }),
 );
+//Acording  to better-auth docs this line has to be before express.json() midleware
+app.all("/api/auth/{*any}", toNodeHandler(auth));
 
 app.use(express.json());
 

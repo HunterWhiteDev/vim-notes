@@ -7,7 +7,6 @@ interface FileProps {
     content: string;
   };
   deleteFileIdx: number;
-  confirmingDelete: boolean;
 }
 
 export default function File({
@@ -25,12 +24,12 @@ export default function File({
           : null
       } `}
     >
-      {file.content.slice(0, 100) || (
+      {file.content.slice(0, 20) || (
         <span className="text-gray-500">Empty Note</span>
       )}
 
       {deleteFileIdx === idx ? (
-        <div className="flex-col items-center justify-center text-xs">
+        <div className="flex-col items-center justify-center text-center text-xs">
           <div>delete?</div>
           <div>y/n</div>
         </div>
