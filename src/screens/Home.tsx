@@ -1,15 +1,16 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, EventHandler } from "react";
 import Editor from "./Editor";
 import api from "../axios";
 import _debounce from "lodash/debounce";
 import Sidebar from "./Sidebar";
 import { commandData } from "../components/CommandPallete";
 import { useSession } from "@/lib/authClient";
+import { AxiosError } from "axios";
+import useToast from "@/hooks/useToast";
 
 function Home() {
   const editorRef = useRef(null);
 
-  const [openedFileIdx, setOpenedFileIdx] = useState(0);
   const selectedFileIdx = useRef(0);
   const selectedCommandIdx = useRef(0);
   const [, forceRerender] = useState(0);
@@ -20,6 +21,8 @@ function Home() {
 
   const session = useSession();
   console.log({ session });
+
+  const toast = useToast();
 
   const handleKeyDown = async (e) => {
     const key = e.key;
@@ -131,7 +134,6 @@ function Home() {
         commandData[selectedCommandIdx.current].action();
         return;
       }
-      setOpenedFileIdx(selectedFileIdx.current);
       editorRef.current.focus();
       reRender = true;
     }
@@ -158,14 +160,20 @@ function Home() {
   }, [session]);
 
   const handleFileDataChange = async (e: string) => {
-    //TODO: Setup debounce in this function
-    const response = await api({
-      method: "put",
-      url: `/note/${filesData.current[selectedFileIdx.current].id}`,
-      data: { fileData: e },
-    });
+    try {
+      const response = await api({
+        method: "put",
+        url: `/note/${filesData.current[selectedFileIdx.current].id}`,
+        data: { fileData: e },
+      });
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data.message || error.message);
+      }
+    }
 
     filesData.current[selectedFileIdx.current].content = e;
+    filesData.current[selectedFileIdx.current].updated_at = new Date();
 
     forceRerender((n) => n + 1);
   };
@@ -175,11 +183,10 @@ function Home() {
   ]);
 
   return (
-    <div className="flex h-[100vh] bg-gray-900 text-white">
-      <div className="w-[200px]">
+    <div className="flex h-screen bg-gray-900 text-white">
+      <div className="w-50">
         <Sidebar
           showPallete={showPallete.current}
-          openedFileIdx={openedFileIdx}
           selectedFileIdx={selectedFileIdx.current}
           files={filesData.current}
           selectedCommandIdx={selectedCommandIdx.current}

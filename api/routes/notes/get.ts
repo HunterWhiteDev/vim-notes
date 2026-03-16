@@ -6,22 +6,30 @@ import { auth } from "../../auth";
 import { fromNodeHeaders } from "better-auth/node";
 
 export default async function (req: Request, res: Response) {
-  const session = await auth.api.getSession({
-    headers: fromNodeHeaders(req.headers),
-  });
+  try {
+    const session = await auth.api.getSession({
+      headers: fromNodeHeaders(req.headers),
+    });
 
-  if (!session) {
-    res.status(500).send({ message: "No auth session found" });
-    return;
+    if (!session) {
+      res.status(401).send({ message: "No auth session found" });
+      return;
+    }
+
+    const userId = session.user.id;
+
+    const response = await db
+      .select({
+        id: notesTable.id,
+        content: notesTable.content,
+        updated_at: notesTable.updated_at,
+      })
+      .from(notesTable)
+      .where(eq(notesTable.user_id, userId))
+      .orderBy(desc(notesTable.updated_at));
+    res.status(200).send({ notes: response });
+  } catch (error) {
+    if (error instanceof Error)
+      res.status(500).send({ message: error.message });
   }
-
-  const userId = session.user.id;
-
-  const response = await db
-    .select({ id: notesTable.id, content: notesTable.content })
-    .from(notesTable)
-    .where(eq(notesTable.user_id, userId))
-    .orderBy(desc(notesTable.updated_at));
-  console.log({ response });
-  res.status(200).send({ notes: response });
 }

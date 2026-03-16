@@ -11,14 +11,14 @@
     "dev": "tsx --watch index.ts"
   },
   "dependencies": {
-    "@better-auth/drizzle-adapter": "https://pkg.pr.new/better-auth/better-auth/@better-auth/drizzle-adapter@6913",
     "@types/cors": "^2.8.19",
     "better-auth": "^1.5.5",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "drizzle-kit": "^0.31.9",
     "drizzle-orm": "^0.45.1",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "pg": "^8.20.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

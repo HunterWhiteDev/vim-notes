@@ -5,15 +5,20 @@ import { notesTable } from "../../drizzle/schema/notes";
 import { auth } from "../../auth";
 import { fromNodeHeaders } from "better-auth/node";
 export default async function postNote(req: Request, res: Response) {
-  const session = await auth.api.getSession({
-    headers: fromNodeHeaders(req.headers),
-  });
+  try {
+    const session = await auth.api.getSession({
+      headers: fromNodeHeaders(req.headers),
+    });
 
-  const response = await db
-    .insert(notesTable)
-    .values({ content: "New Note", user_id: session?.user.id })
-    .returning({ id: notesTable.id, content: notesTable.content });
-  console.log({ response });
+    const response = await db
+      .insert(notesTable)
+      .values({ content: "New Note", user_id: session?.user.id })
+      .returning({ id: notesTable.id, content: notesTable.content });
+    console.log({ response });
 
-  res.status(200).send({ success: true, note: response });
+    res.status(200).send({ success: true, note: response });
+  } catch (error) {
+    if (error instanceof Error)
+      res.status(500).send({ message: error.message });
+  }
 }

@@ -15,7 +15,7 @@ export default function FileExplorer({
 }: FileExplorerProps) {
   return (
     <div className="border-r-gr h-[100vh] border-r-2 text-white">
-      <div className="flex items-center justify-around py-1 text-xs">
+      <div className="flex items-center justify-around border-b-2 border-gray-500 py-1 text-xs">
         n: new file d: delete file
       </div>
 

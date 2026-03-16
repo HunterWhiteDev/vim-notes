@@ -1,3 +1,5 @@
+import moment from "moment";
+
 interface FileProps {
   openedFileIdx: number;
   idx: number;
@@ -5,12 +7,12 @@ interface FileProps {
   file: {
     id: number;
     content: string;
+    updated_at: string;
   };
   deleteFileIdx: number;
 }
 
 export default function File({
-  openedFileIdx,
   idx,
   selectedFileIdx,
   file,
@@ -18,22 +20,29 @@ export default function File({
 }: FileProps) {
   return (
     <div
-      className={`flex cursor-pointer items-center justify-between border-b-2 border-gray-500 p-1 text-sm text-white hover:bg-gray-700 ${openedFileIdx === idx ? "bg-gray-700" : null} ${
+      className={`border-b-2 border-gray-500 p-1 ${
         selectedFileIdx === idx
-          ? "border-b-4 border-t-4 !border-blue-500"
+          ? "border-y-2 !border-blue-500 bg-gray-700"
           : null
-      } `}
+      } hover:bg-gray-700`}
     >
-      {file.content.slice(0, 20) || (
-        <span className="text-gray-500">Empty Note</span>
-      )}
+      <div
+        className={`flex cursor-pointer items-center justify-between text-sm text-white`}
+      >
+        {file.content.slice(0, 20) || (
+          <span className="text-gray-500">Empty Note</span>
+        )}
 
-      {deleteFileIdx === idx ? (
-        <div className="flex-col items-center justify-center text-center text-xs">
-          <div>delete?</div>
-          <div>y/n</div>
-        </div>
-      ) : null}
+        {deleteFileIdx === idx ? (
+          <div className="flex-col items-center justify-center text-center text-xs">
+            <div>delete?</div>
+            <div>y/n</div>
+          </div>
+        ) : null}
+      </div>
+      <div className="flex items-center text-[10px] text-gray-400">
+        updated {moment(file.updated_at).fromNow()}
+      </div>
     </div>
   );
 }

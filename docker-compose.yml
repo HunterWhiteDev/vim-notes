@@ -10,5 +10,21 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+  vimnotes-client:
+    env_file: ".env"
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 5173:5173
+  vimnotes-api:
+    depends_on:
+      - db
+    env_file: "./api/.env"
+    build:
+      context: ./api/
+      dockerfile: Dockerfile
+    ports:
+      - 5001:5001
 volumes:
   pgdata:

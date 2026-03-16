@@ -2,7 +2,6 @@ import express from "express";
 import * as dotenv from "dotenv";
 import getNotes from "./routes/notes/get";
 import cors from "cors";
-import getNote from "./routes/note/get";
 import postNote from "./routes/note/post";
 import updateNote from "./routes/note/update";
 import deleteNote from "./routes/note/delete";
@@ -29,7 +28,8 @@ app.use(express.json());
 app.get("/notes", getNotes);
 
 //Routes for single note
-// app.get("/note/:name", getNote);
+//module app.get("/note/:name", getNote);
+//
 app.post("/note", postNote);
 app.put("/note/:id", updateNote);
 app.delete("/note/:id", deleteNote);

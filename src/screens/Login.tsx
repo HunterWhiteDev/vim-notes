@@ -1,37 +1,41 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import useToast from "@/hooks/useToast";
 import { signIn, signUp } from "@/lib/authClient";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+
+const initialFormState = {
+  email: "",
+  password: "",
+  confirmPassword: "",
+  username: "",
+};
 
 export default function Login() {
   const [message, setMessage] = useState("");
   const [page, setPage] = useState("login");
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    username: "",
-  });
+  const [formData, setFormData] = useState(initialFormState);
 
   const navigate = useNavigate();
+  const toast = useToast();
 
-  const handleForm = (e: React.FormEvent) => {
+  const handleForm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (page === "login") {
-      const { error, data } = signIn.email({
+      const { error, data } = await signIn.email({
         email: formData.email,
         password: formData.password,
       });
 
       if (!error) {
         navigate("/");
+      } else {
+        toast.error(error.message);
       }
-
-      console.log({ error, data });
     } else {
-      const { error, data } = signUp.email({
+      const { error, data } = await signUp.email({
         name: formData.username,
         email: formData.email,
         password: formData.password,
@@ -39,6 +43,8 @@ export default function Login() {
 
       if (!error) {
         setMessage("Success! You may now login");
+      } else {
+        toast.error(error.message);
       }
     }
   };
@@ -46,7 +52,7 @@ export default function Login() {
   const handlePageSwitch = () => {
     if (page === "login") setPage("register");
     else setPage("login");
-    setFormData({});
+    setFormData(initialFormState);
   };
 
   const handleFormChange = (
