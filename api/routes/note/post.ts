@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
-import fs from "fs";
 import db from "../../drizzle/drizzle";
 import { notesTable } from "../../drizzle/schema/notes";
-import { auth } from "../../auth";
+import { auth } from "../../lib/auth/auth";
 import { fromNodeHeaders } from "better-auth/node";
 export default async function postNote(req: Request, res: Response) {
   try {

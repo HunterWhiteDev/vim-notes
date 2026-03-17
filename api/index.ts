@@ -6,7 +6,9 @@ import postNote from "./routes/note/post";
 import updateNote from "./routes/note/update";
 import deleteNote from "./routes/note/delete";
 import { toNodeHandler } from "better-auth/node";
-import { auth } from "./auth";
+import { auth } from "./lib/auth/auth";
+import checkAdminExists from "./lib/utils/checkAdminExists";
+import signUp from "./middleware/signUp";
 dotenv.config();
 
 const PORT = process.env.EXPRESS_PORT;
@@ -19,6 +21,9 @@ app.use(
     credentials: true,
   }),
 );
+
+app.use(signUp);
+
 //Acording  to better-auth docs this line has to be before express.json() midleware
 app.all("/api/auth/{*any}", toNodeHandler(auth));
 
@@ -35,5 +40,6 @@ app.put("/note/:id", updateNote);
 app.delete("/note/:id", deleteNote);
 
 app.listen(PORT, () => {
+  checkAdminExists();
   console.log(`Express is running on port ${PORT}`);
 });

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import db from "../../drizzle/drizzle";
 import { notesTable } from "../../drizzle/schema/notes";
 import { desc, eq } from "drizzle-orm";
-import { auth } from "../../auth";
+import { auth } from "../../lib/auth/auth";
 import { fromNodeHeaders } from "better-auth/node";
 
 export default async function (req: Request, res: Response) {

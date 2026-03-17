@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import db from "../../drizzle/drizzle";
 import { eq } from "drizzle-orm";
 import { notesTable } from "../../drizzle/schema/notes";
-import { auth } from "../../auth";
+import { auth } from "../../lib/auth/auth";
 import { fromNodeHeaders } from "better-auth/node";
 
 export default async function deleteNote(req: Request, res: Response) {
