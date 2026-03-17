@@ -8,7 +8,8 @@
   "main": "index.ts",
   "scripts": {
     "test": "npm run dev",
-    "dev": "tsx --watch index.ts"
+    "dev": "npm run push && tsx --watch index.ts",
+    "push": "npx drizzle-kit push"
   },
   "dependencies": {
     "@types/cors": "^2.8.19",
