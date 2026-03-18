@@ -2,11 +2,7 @@ import MonacoEditor from "@monaco-editor/react";
 import { initVimMode } from "monaco-vim";
 import { useRef } from "react";
 
-export default function Editor({
-  editorRef,
-  fileData,
-  handleFileDataChange,
-}) {
+export default function Editor({ editorRef, fileData, handleFileDataChange }) {
   console.log({ fileData });
   const statusBarRef = useRef(null);
   const vimRef = useRef(null);
@@ -29,10 +25,16 @@ export default function Editor({
         value={fileData}
         onChange={handleFileDataChange}
       />
-      <div
-        ref={statusBarRef}
-        className="fixed bottom-0 h-8 w-full border-t-2 border-t-white px-4 py-1 text-white"
-      ></div>
+      <div className="fixed bottom-0 flex w-full items-center border-t-2 border-white">
+        <div
+          ref={statusBarRef}
+          className="h-8 w-50 border-r-2 border-r-white px-4 py-1 text-white"
+        ></div>
+        <div className="px-2">
+          alt+escape: focus file explorer | j: move down file | k: move up file
+          | enter: select file. | n: new file | d: delete file
+        </div>
+      </div>
     </div>
   );
 }
