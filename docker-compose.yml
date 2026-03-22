@@ -3,8 +3,9 @@ services:
     image: postgres:13
     container_name: postgres-vimnotes
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
+      #Set this to what you want
+      POSTGRES_USER:
+      POSTGRES_PASSWORD:
       POSTGRES_DB: vimnotes
     volumes:
       - pgdata:/var/lib/postgresql/data
