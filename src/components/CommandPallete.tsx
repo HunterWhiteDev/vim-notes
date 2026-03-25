@@ -13,7 +13,7 @@ export const commandData: {
     },
   ];
 
-export default function CommandPallete({ selectedFileIdx }) {
+export default function CommandPallete({ selectedFileIdx }: any) {
   return (
     <div className="text-white">
       {commandData.map(({ name, Icon, action }, idx) => (
@@ -29,7 +29,8 @@ export default function CommandPallete({ selectedFileIdx }) {
   );
 }
 
-function Command({ name, Icon, action, idx, selectedFileIdx }) {
+//TODO: Fix this
+function Command({ name, Icon, action, idx, selectedFileIdx }: any) {
   return (
     <div
       className={`flex cursor-pointer items-center border-b-2 border-gray-500 p-2 text-white hover:bg-gray-700 ${selectedFileIdx === idx
