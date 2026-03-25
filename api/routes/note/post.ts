@@ -13,7 +13,6 @@ export default async function postNote(req: Request, res: Response) {
       .insert(notesTable)
       .values({ content: "New Note", user_id: session?.user.id })
       .returning({ id: notesTable.id, content: notesTable.content });
-    console.log({ response });
 
     res.status(200).send({ success: true, note: response });
   } catch (error) {

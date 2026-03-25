@@ -1,0 +1,19 @@
+#Port that express lives on
+EXPRESS_PORT=5001
+
+#Url to your frontend
+VITE_ORIGIN=http://localhost:5173
+
+#Postgres URL
+#DATABASE_URL=postgres://postgres:root@db:5432/vimnotes
+DATABASE_URL=postgres://postgres:root@0.0.0.0:5432/vimnotes
+
+#Email and password for the default account 
+ADMIN_EMAIL=hunterwhite.dev@gmail.com
+ADMIN_PASSWORD=password
+
+#Enable this if you want to allow anyone to sign up.
+ALLOW_USER_SIGN_UPS=false
+
+#Run this command to generate: openssl rand -base64 32
+BETTER_AUTH_SECRET=GZ2Dufjce4sHovgde9oZTDq19vI+t7f9Y+9rbo+ELoE=

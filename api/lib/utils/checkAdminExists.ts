@@ -6,7 +6,6 @@ import { account } from "../../drizzle/schema/authSchema";
 dotenv.config();
 export default async function checkAdminExists() {
   const response = await db.select({ count: count() }).from(account);
-  console.log({ response });
   if (response[0].count > 0) {
     console.log("Admin users already exists, skipping seed.");
     return;
