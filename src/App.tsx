@@ -3,8 +3,7 @@ import { useSession } from "./lib/authClient";
 import { Route, Routes, useNavigate } from "react-router";
 import Home from "./screens/Home";
 import Login from "./screens/Login";
-import toast, { Toaster } from "react-hot-toast";
-import useToast from "./hooks/useToast";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   const auth = useSession();
