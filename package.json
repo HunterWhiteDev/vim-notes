@@ -42,7 +42,8 @@
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "format": "prettier --write \\\"src/**/*.{js,jsx}\\\"",
-    "dev": "concurrently --names \"vite,node\" \"vite\" \"cd api && npm run dev\""
+    "dev": "concurrently --names \"vite,node\" \"vite\" \"npm run dev:api\"",
+    "dev:api": "tsx --watch ./api/index.ts"
   },
   "type": "module",
   "version": "0.0.0"
