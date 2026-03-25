@@ -3,7 +3,6 @@ import { initVimMode } from "monaco-vim";
 import { useRef } from "react";
 
 export default function Editor({ editorRef, fileData, handleFileDataChange }) {
-  console.log({ fileData });
   const statusBarRef = useRef(null);
   const vimRef = useRef(null);
 
@@ -17,7 +16,7 @@ export default function Editor({ editorRef, fileData, handleFileDataChange }) {
   return (
     <div className="h-screen w-full">
       <MonacoEditor
-        options={{ minimap: { enabled: false } }}
+        options={{ minimap: { enabled: false }, wordWrap: "on" }}
         defaultLanguage="markdown"
         onMount={handleEditorDidMount}
         className="monacoEditor h-full w-full !bg-gray-900"
