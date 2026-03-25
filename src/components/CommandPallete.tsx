@@ -1,4 +1,4 @@
-import { FilePlus, IconNode } from "lucide-react";
+import { FilePlus } from "lucide-react";
 import { ReactNode } from "react";
 
 export const commandData: {
