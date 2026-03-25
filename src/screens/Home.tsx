@@ -183,8 +183,8 @@ function Home() {
   ]);
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
-      <div className="w-50">
+    <div className="flex h-screen flex-col bg-gray-900 text-white md:flex-row">
+      <div className="md:w-50">
         <Sidebar
           showPallete={showPallete.current}
           selectedFileIdx={selectedFileIdx.current}
