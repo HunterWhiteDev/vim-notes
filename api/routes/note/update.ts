@@ -36,7 +36,6 @@ export default async function updateNote(req: Request, res: Response) {
       .update(notesTable)
       .set({ content: fileData })
       .where(eq(notesTable.id, parseInt(id as string)));
-    console.log({ response });
 
     res.status(200).send();
   } catch (error) {
