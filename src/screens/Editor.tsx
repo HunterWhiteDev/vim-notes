@@ -16,7 +16,11 @@ export default function Editor({ editorRef, fileData, handleFileDataChange }) {
   return (
     <div className="h-screen w-full">
       <MonacoEditor
-        options={{ minimap: { enabled: false }, wordWrap: "on" }}
+        options={{
+          minimap: { enabled: false },
+          wordWrap: "on",
+          suggest: { showWords: false },
+        }}
         defaultLanguage="markdown"
         onMount={handleEditorDidMount}
         className="monacoEditor h-full w-full !bg-gray-900"
