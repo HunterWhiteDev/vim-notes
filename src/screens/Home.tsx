@@ -174,8 +174,6 @@ function Home() {
 
     filesData.current[selectedFileIdx.current].content = e;
     filesData.current[selectedFileIdx.current].updated_at = new Date();
-
-    forceRerender((n) => n + 1);
   };
 
   const debounceDataFn = useCallback(_debounce(handleFileDataChange, 500), [
