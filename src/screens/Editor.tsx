@@ -20,6 +20,7 @@ export default function Editor({ editorRef, fileData, handleFileDataChange }) {
           minimap: { enabled: false },
           wordWrap: "on",
           suggest: { showWords: false },
+          lineNumbers: "relative",
         }}
         defaultLanguage="markdown"
         onMount={handleEditorDidMount}
