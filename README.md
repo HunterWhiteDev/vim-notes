@@ -18,13 +18,16 @@ Clone the repo. `https://github.com/HunterWhiteDev/vim-notes.git`
 
 ### Step 2)
 
-Copy the .env.example files `cp .env.example .env && cp api/.env.example api/.env`
-You will need to change the vales in the .env files according to how you want to run your server. Setup the correct ports, an initial admin account, and whether you want to enable anyone to sign up for your hosted version of the app.
+Copy the .env.example files `cp .env.example .env`
+You will need to change the vales in the .env file according to how you want to run your server. Setup the correct ports, an initial admin account, and whether you want to enable anyone to sign up for your hosted version of the app.
 
 ### Step 3)
 
-Spin up the docker container. `docker compose up -d --build`
-This command will build the docker images and serve the front-end client and back-end api. It may be possible that on the first run the drizzle migrations may fail. Running `docker compose down` andthen `docker compose up -d` again should fix this.
+Spin up the docker container.
+
+The very first time you install you spin up the docker containers you will need to spin up the database first `docker compose up db -d --build`.
+
+Then, you can spin up the Vite and Express contaiiners with `docker compose up api client -d --build`
 
 ### Step 4
 
