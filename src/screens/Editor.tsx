@@ -20,6 +20,7 @@ export default function Editor({ editorRef, fileData, handleFileDataChange }) {
           minimap: { enabled: false },
           wordWrap: "on",
           suggest: { showWords: false },
+          lineNumbers: "relative",
         }}
         defaultLanguage="markdown"
         onMount={handleEditorDidMount}
@@ -28,7 +29,7 @@ export default function Editor({ editorRef, fileData, handleFileDataChange }) {
         value={fileData}
         onChange={handleFileDataChange}
       />
-      <div className="fixed bottom-0 flex w-full items-center border-t-2 border-white">
+      <div className="fixed bottom-0 flex w-full items-center border-t-2 border-white bg-gray-900">
         <div
           ref={statusBarRef}
           className="h-8 w-50 border-r-2 border-r-white px-4 py-1 text-white"
