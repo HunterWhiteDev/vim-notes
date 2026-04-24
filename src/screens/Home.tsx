@@ -7,9 +7,12 @@ import { commandData } from "../components/CommandPallete";
 import { useSession } from "@/lib/authClient";
 import { AxiosError } from "axios";
 import useToast from "@/hooks/useToast";
+import showdown from "showdown";
+
+const converter = new showdown.Converter();
 
 function Home() {
-  const editorRef = useRef(null);
+  const editorRef = useRef<HTMLElement>(null);
 
   const selectedFileIdx = useRef(0);
   const selectedCommandIdx = useRef(0);
@@ -20,7 +23,6 @@ function Home() {
   const deleteFileIdx = useRef(-1);
 
   const session = useSession();
-  console.log({ session });
 
   const toast = useToast();
 
@@ -32,11 +34,7 @@ function Home() {
     }
 
     //This prevents the rest of the listener from firing when we are typing in the editor in isnert mode
-    if (
-      window.document.activeElement?.className.includes(
-        "monaco-mouse-cursor-text",
-      )
-    ) {
+    if (window.document.activeElement?.className.includes("cm-content")) {
       return;
     }
 
@@ -196,6 +194,7 @@ function Home() {
           mode={mode}
           editorRef={editorRef}
           fileData={filesData.current[selectedFileIdx.current]?.content}
+          selectedFileIdx={selectedFileIdx}
           handleFileDataChange={debounceDataFn}
         />
       </div>
