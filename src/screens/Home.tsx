@@ -20,6 +20,8 @@ function Home() {
   const showPallete = useRef(false);
   const deleteFileIdx = useRef(-1);
 
+  const [fetching, setFetching] = useState(false);
+
   const session = useSession();
 
   const toast = useToast();
@@ -147,9 +149,11 @@ function Home() {
 
   useEffect(() => {
     const getData = async () => {
+      setFetching(true);
       const response = await api({ url: "/notes", method: "get" });
       filesData.current = response.data.notes;
       forceRerender((n) => n + 1);
+      setFetching(false);
     };
 
     getData();
@@ -188,13 +192,19 @@ function Home() {
         />
       </div>
       <div className="w-full">
-        <Editor
-          mode={mode}
-          editorRef={editorRef}
-          fileData={filesData.current[selectedFileIdx.current]?.content}
-          selectedFileIdx={selectedFileIdx}
-          handleFileDataChange={debounceDataFn}
-        />
+        {fetching ? (
+          <div className="animate-spin">
+            <Loader />
+          </div>
+        ) : (
+          <Editor
+            mode={mode}
+            editorRef={editorRef}
+            fileData={filesData.current[selectedFileIdx.current]?.content}
+            selectedFileIdx={selectedFileIdx}
+            handleFileDataChange={debounceDataFn}
+          />
+        )}
       </div>
     </div>
   );
