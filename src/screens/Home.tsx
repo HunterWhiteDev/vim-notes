@@ -7,9 +7,7 @@ import { commandData } from "../components/CommandPallete";
 import { useSession } from "@/lib/authClient";
 import { AxiosError } from "axios";
 import useToast from "@/hooks/useToast";
-import showdown from "showdown";
-
-const converter = new showdown.Converter();
+import { Loader } from "lucide-react";
 
 function Home() {
   const editorRef = useRef<HTMLElement>(null);
