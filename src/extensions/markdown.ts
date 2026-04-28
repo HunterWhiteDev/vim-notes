@@ -25,17 +25,16 @@ function markDecorations(state: EditorState, node) {
 
           //If we are currently within range of the element dont hide the mark
           if (cursorPostion >= node.from && cursorPostion <= node.to) {
-            return;
+            //TODO: I think this line is causing the infinite loop somehow, doesnt know when to stop or compute or something. Maybe because this is an interation? Idk figure this out when you feel like it
+            //
+            //            return;
+          } else {
+            const deco = Decoration.replace({
+              inclusive: false,
+            });
+            const range = deco.range(markNode.from, markNode.to);
+            decorationsArr.push(range);
           }
-
-          const deco = Decoration.mark({
-            tagName: "span",
-            attributes: {
-              style: "font-size: 0",
-            },
-          });
-          const range = deco.range(markNode.from, markNode.to);
-          decorationsArr.push(range);
         }
       }
     },

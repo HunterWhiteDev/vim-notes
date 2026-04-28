@@ -5,6 +5,7 @@ const darkTheme = EditorView.theme({
   ".cm-content": {
     text: "white",
     "white-space": "pre-wrap !important",
+    height: "calc(100vh - 1rem)",
   },
   ".cm-gutters": {
     border: "none !important",

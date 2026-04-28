@@ -19,7 +19,6 @@ const viewPlugin = ViewPlugin.fromClass(
     update(update: ViewUpdate) {
       if (update.docChanged || update.viewportChanged) {
         const formatedString = update.state.doc.toString();
-        console.log({ formatedString });
         globalConfigState.onUpdate(formatedString);
       }
     }

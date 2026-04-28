@@ -26,15 +26,15 @@ export default function Editor({
     let startState = EditorState.create({
       doc: fileData,
       extensions: [
-        vim(),
         onUpdate({ onUpdate: handleFileDataChange }),
         EditorView.lineWrapping,
         gutters(),
         lineNumbers(),
-        markdownExt,
         markdown({ base: markdownLanguage }),
+        markdownExt,
         drawSelection(),
         darkTheme,
+        vim(),
       ],
     });
 
@@ -54,13 +54,11 @@ export default function Editor({
   }, [selectedFileIdx.current]);
 
   return (
-    <div className="h-screen">
-      <div ref={containerRef} className="h-full cursor-text!"></div>
-      <div className="fixed bottom-0 flex w-full items-center border-2 border-white bg-gray-900">
-        {/* <div */}
-        {/*   ref={statusBarRef} */}
-        {/*   className="h-8 w-50 border-r-2 border-r-white px-4 py-1 text-white" */}
-        {/* ></div> */}
+    <div className="">
+      <div className="max-h-[96vh] overflow-scroll">
+        <div ref={containerRef} className="cursor-text!"></div>
+      </div>
+      <div className="h-2vh fixed bottom-0 flex w-full items-center border-2 border-white bg-gray-900">
         <div className="px-2">
           alt+escape: focus file explorer | j: move down file | k: move up file
           | enter: select file. | n: new file | d: delete file
