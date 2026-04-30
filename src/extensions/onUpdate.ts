@@ -13,7 +13,6 @@ const viewPlugin = ViewPlugin.fromClass(
     config;
     constructor(view: EditorView) {
       this.config = globalConfigState;
-      console.log(this.config);
     }
 
     update(update: ViewUpdate) {
