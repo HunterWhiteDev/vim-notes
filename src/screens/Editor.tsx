@@ -26,12 +26,10 @@ export default function Editor({
   handleFileDataChange,
   selectedFileIdx,
 }: EditorProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<any>(null);
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    if (!editorRef?.current) return;
     let startState = EditorState.create({
       doc: fileData,
       extensions: [
