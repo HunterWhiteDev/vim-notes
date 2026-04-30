@@ -1,15 +1,13 @@
+import { Note } from "@/screens/Home";
 import moment from "moment";
+import { Dispatch, RefObject, SetStateAction } from "react";
 
 interface FileProps {
-  openedFileIdx: number;
   idx: number;
-  selectedFileIdx: number;
-  file: {
-    id: number;
-    content: string;
-    updated_at: string;
-  };
+  selectedFileIdx: RefObject<number>;
+  file: Note;
   deleteFileIdx: number;
+  forceRerender: Dispatch<SetStateAction<number>>;
 }
 
 export default function File({
@@ -34,7 +32,7 @@ export default function File({
       <div
         className={`flex cursor-pointer items-center justify-between text-sm text-white`}
       >
-        {file.content.slice(0, 10) || (
+        {file.content?.slice(0, 20) || (
           <span className="text-gray-500">Empty Note</span>
         )}
 

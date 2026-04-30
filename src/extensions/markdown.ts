@@ -6,7 +6,7 @@ import {
   Decoration,
 } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
-import { EditorState, Range } from "@codemirror/state";
+import { Range } from "@codemirror/state";
 
 function decorations(view: EditorView) {
   let decorationsArr: Range<Decoration>[] = [];
