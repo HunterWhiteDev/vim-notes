@@ -26,12 +26,12 @@ export default function Editor({
     let startState = EditorState.create({
       doc: fileData,
       extensions: [
+        markdownExt,
         onUpdate({ onUpdate: handleFileDataChange }),
         EditorView.lineWrapping,
         gutters(),
         lineNumbers(),
         markdown({ base: markdownLanguage }),
-        markdownExt,
         drawSelection(),
         darkTheme,
         vim(),
