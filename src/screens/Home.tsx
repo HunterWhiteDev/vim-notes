@@ -184,8 +184,9 @@ function Home() {
     <div className="flex h-screen flex-col bg-gray-900 text-white md:flex-row">
       <div className="md:w-50">
         <Sidebar
+          forceRerender={forceRerender}
           showPallete={showPallete.current}
-          selectedFileIdx={selectedFileIdx.current}
+          selectedFileIdx={selectedFileIdx}
           files={filesData.current}
           selectedCommandIdx={selectedCommandIdx.current}
           deleteFileIdx={deleteFileIdx.current}

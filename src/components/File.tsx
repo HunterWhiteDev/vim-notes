@@ -13,6 +13,7 @@ interface FileProps {
 }
 
 export default function File({
+  forceRerender,
   idx,
   selectedFileIdx,
   file,
@@ -20,11 +21,15 @@ export default function File({
 }: FileProps) {
   return (
     <div
-      className={`min-w-30 border-x-1 border-gray-500 p-1 md:min-w-50 md:border-x-0 md:border-y-1 ${
-        selectedFileIdx === idx
+      className={`min-w-30 cursor-pointer border-x-1 border-gray-500 p-1 md:min-w-50 md:border-x-0 md:border-y-1 ${
+        selectedFileIdx.current === idx
           ? "border-blue-500! bg-gray-700 md:border-y-0"
           : null
       } hover:bg-gray-700`}
+      onClick={() => {
+        selectedFileIdx.current = idx;
+        forceRerender((idx) => idx + 1);
+      }}
     >
       <div
         className={`flex cursor-pointer items-center justify-between text-sm text-white`}
