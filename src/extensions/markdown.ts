@@ -65,6 +65,7 @@ function decorations(view: EditorView) {
             });
             const range = deco.range(node.from, node.to);
             decorationsArr.push(range);
+            break;
           }
           case "Emphasis": {
             const deco = Decoration.mark({
@@ -75,6 +76,7 @@ function decorations(view: EditorView) {
             });
             const range = deco.range(node.from, node.to);
             decorationsArr.push(range);
+            break;
           }
 
           case "Subscript": {
