@@ -13,13 +13,11 @@ const viewPlugin = ViewPlugin.fromClass(
     config;
     constructor(view: EditorView) {
       this.config = globalConfigState;
-      console.log(this.config);
     }
 
     update(update: ViewUpdate) {
       if (update.docChanged || update.viewportChanged) {
         const formatedString = update.state.doc.toString();
-        console.log({ formatedString });
         globalConfigState.onUpdate(formatedString);
       }
     }
