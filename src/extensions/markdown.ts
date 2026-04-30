@@ -8,41 +8,6 @@ import {
 import { syntaxTree } from "@codemirror/language";
 import { EditorState, Range } from "@codemirror/state";
 
-function markDecorations(state: EditorState, node) {
-  const decorationsArr: Range<Decoration>[] = [];
-
-  syntaxTree(state).iterate({
-    from: node.from,
-    to: node.to,
-    enter: (markNode) => {
-      switch (markNode.name) {
-        case "EmphasisMark":
-        case "StrongEmphasisMark":
-        case "SubscriptMark":
-        case "QuoteMark":
-        case "HeaderMark": {
-          const cursorPostion = state.selection.ranges[0].from;
-
-          //If we are currently within range of the element dont hide the mark
-          if (cursorPostion >= node.from && cursorPostion <= node.to) {
-            //TODO: I think this line is causing the infinite loop somehow, doesnt know when to stop or compute or something. Maybe because this is an interation? Idk figure this out when you feel like it
-            //
-            //            return;
-          } else {
-            const deco = Decoration.replace({
-              inclusive: false,
-            });
-            const range = deco.range(markNode.from, markNode.to);
-            decorationsArr.push(range);
-          }
-        }
-      }
-    },
-  });
-
-  return decorationsArr;
-}
-
 function decorations(view: EditorView) {
   let decorationsArr: Range<Decoration>[] = [];
 
@@ -54,6 +19,43 @@ function decorations(view: EditorView) {
       to,
       enter: (node) => {
         switch (node.name) {
+          case "EmphasisMark":
+          case "StrongEmphasisMark":
+          case "SubscriptMark":
+          case "QuoteMark":
+          case "CodeMark":
+          case "HeaderMark": {
+            const cursorPostion = view.state.selection.ranges[0].from;
+
+            const parentNode = node.node.parent;
+            const grandParent = node.node.parent?.parent;
+
+            if (!parentNode) return;
+
+            let parentNodeFrom = parentNode.from;
+            let parentNodeTo = parentNode.to;
+
+            if (grandParent?.name === "Emphasis") {
+              parentNodeFrom = grandParent.from;
+              parentNodeTo = grandParent.to;
+            }
+
+            if (
+              cursorPostion >= parentNodeFrom &&
+              cursorPostion <= parentNodeTo
+            ) {
+              return;
+            } else {
+              const deco = Decoration.replace({
+                inclusive: true,
+              });
+              const range = deco.range(node.from, node.to);
+              decorationsArr.push(range);
+            }
+
+            break;
+          }
+
           case "StrongEmphasis": {
             const deco = Decoration.mark({
               tagName: "span",
@@ -63,8 +65,6 @@ function decorations(view: EditorView) {
             });
             const range = deco.range(node.from, node.to);
             decorationsArr.push(range);
-            decorationsArr.push(...markDecorations(view.state, node));
-            break;
           }
           case "Emphasis": {
             const deco = Decoration.mark({
@@ -75,8 +75,6 @@ function decorations(view: EditorView) {
             });
             const range = deco.range(node.from, node.to);
             decorationsArr.push(range);
-            decorationsArr.push(...markDecorations(view.state, node));
-            break;
           }
 
           case "Subscript": {
@@ -88,7 +86,6 @@ function decorations(view: EditorView) {
             });
             const range = deco.range(node.from, node.to);
             decorationsArr.push(range);
-            decorationsArr.push(...markDecorations(view.state, node));
             break;
           }
           case "Blockquote": {
@@ -102,7 +99,6 @@ function decorations(view: EditorView) {
             const range = deco.range(node.from, node.to);
             decorationsArr.push(range);
 
-            decorationsArr.push(...markDecorations(view.state, node));
             break;
           }
           case "ATXHeading1": {
@@ -114,7 +110,6 @@ function decorations(view: EditorView) {
             });
             const range = deco.range(node.from, node.to);
             decorationsArr.push(range);
-            decorationsArr.push(...markDecorations(view.state, node));
             break;
           }
           case "ATXHeading2": {
@@ -126,9 +121,6 @@ function decorations(view: EditorView) {
             });
             const range = deco.range(node.from, node.to);
             decorationsArr.push(range);
-
-            decorationsArr.push(...markDecorations(view.state, node));
-            break;
           }
           case "ATXHeading3": {
             const deco = Decoration.mark({
@@ -140,7 +132,6 @@ function decorations(view: EditorView) {
             const range = deco.range(node.from, node.to);
             decorationsArr.push(range);
 
-            decorationsArr.push(...markDecorations(view.state, node));
             break;
           }
           case "ATXHeading4": {
@@ -153,7 +144,6 @@ function decorations(view: EditorView) {
             const range = deco.range(node.from, node.to);
             decorationsArr.push(range);
 
-            decorationsArr.push(...markDecorations(view.state, node));
             break;
           }
           case "ATXHeading5": {
@@ -166,7 +156,6 @@ function decorations(view: EditorView) {
             const range = deco.range(node.from, node.to);
             decorationsArr.push(range);
 
-            decorationsArr.push(...markDecorations(view.state, node));
             break;
           }
           case "ATXHeading6": {
@@ -179,7 +168,6 @@ function decorations(view: EditorView) {
             const range = deco.range(node.from, node.to);
             decorationsArr.push(range);
 
-            decorationsArr.push(...markDecorations(view.state, node));
             break;
           }
           case "InlineCode": {
@@ -192,7 +180,6 @@ function decorations(view: EditorView) {
             const range = deco.range(node.from, node.to);
             decorationsArr.push(range);
 
-            decorationsArr.push(...markDecorations(view.state, node));
             break;
           }
           case "FencedCode": {
@@ -202,14 +189,13 @@ function decorations(view: EditorView) {
                 style: "background-color: #1f2328; border-radius: 0.25rem",
               },
             });
+
             const range = deco.range(node.from, node.to);
+
             decorationsArr.push(range);
 
-            decorationsArr.push(...markDecorations(view.state, node));
             break;
           }
-
-          //The following code will fall through all Mark cases so  the elements can be hidden
         }
       },
     });
@@ -219,14 +205,14 @@ function decorations(view: EditorView) {
     return a.from >= b.from ? 1 : -1;
   });
 
-  return Decoration.set(decorationsArr);
+  return Decoration.set(decorationsArr, true);
 }
 
 const markdownPlugin = ViewPlugin.fromClass(
   class {
     decorations: DecorationSet;
 
-    constructor(view: EditorView, config) {
+    constructor(view: EditorView) {
       this.decorations = decorations(view);
     }
 
@@ -242,16 +228,6 @@ const markdownPlugin = ViewPlugin.fromClass(
   },
   {
     decorations: (v) => v.decorations,
-    //Watch for click and button events so that we update the decorations as soon as we
-    //move the cursor into the right spot
-    eventHandlers: {
-      keydown: function (e, view) {
-        this.decorations = decorations(view);
-      },
-      mousedown: function (e, view) {
-        this.decorations = decorations(view);
-      },
-    },
   },
 );
 
