@@ -9,11 +9,13 @@ export default function Sidebar({
   selectedCommandIdx,
   deleteFileIdx,
   confirmingDelete,
+  forceRerender,
 }) {
   return showPallete ? (
     <CommandPallete selectedFileIdx={selectedCommandIdx} />
   ) : (
     <FileExplorer
+      forceRerender={forceRerender}
       openedFileIdx={openedFileIdx}
       selectedFileIdx={selectedFileIdx}
       files={files}

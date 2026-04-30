@@ -8,6 +8,7 @@ type FileExplorerProps = {
 };
 
 export default function FileExplorer({
+  forceRerender,
   openedFileIdx,
   selectedFileIdx,
   files,
@@ -23,6 +24,7 @@ export default function FileExplorer({
 
       {files.map((file, idx) => (
         <File
+          forceRerender={forceRerender}
           deleteFileIdx={deleteFileIdx}
           openedFileIdx={openedFileIdx}
           idx={idx}
