@@ -1,6 +1,5 @@
 import _debounce from "lodash/debounce";
 import { ViewPlugin, ViewUpdate } from "@codemirror/view";
-import { EditorView } from "codemirror";
 
 type GlobalConfigState = {
   onUpdate: (content: string) => void;
@@ -11,7 +10,7 @@ let globalConfigState: GlobalConfigState;
 const viewPlugin = ViewPlugin.fromClass(
   class {
     config;
-    constructor(view: EditorView) {
+    constructor() {
       this.config = globalConfigState;
     }
 

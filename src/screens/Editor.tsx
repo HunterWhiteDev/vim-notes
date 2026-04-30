@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Ref, RefObject, useEffect, useRef, useState } from "react";
 import { EditorState } from "@codemirror/state";
 import {
   drawSelection,
@@ -11,18 +11,27 @@ import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { vim } from "@replit/codemirror-vim";
 import darkTheme from "@/extensions/darkTheme";
 import onUpdate from "@/extensions/onUpdate";
+import { DebouncedFunc } from "lodash";
+
+interface EditorProps {
+  editorRef: RefObject<EditorView | null>;
+  fileData: string;
+  selectedFileIdx: RefObject<number>;
+  handleFileDataChange: DebouncedFunc<(e: string) => Promise<void>>;
+}
 
 export default function Editor({
   editorRef,
   fileData,
   handleFileDataChange,
   selectedFileIdx,
-}) {
-  const statusBarRef = useRef(null);
+}: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
+    if (!containerRef.current) return;
+    if (!editorRef?.current) return;
     let startState = EditorState.create({
       doc: fileData,
       extensions: [

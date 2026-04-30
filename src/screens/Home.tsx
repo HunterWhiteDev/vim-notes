@@ -8,15 +8,17 @@ import { useSession } from "@/lib/authClient";
 import { AxiosError } from "axios";
 import useToast from "@/hooks/useToast";
 import { Loader } from "lucide-react";
+import { notesTable } from "../../api/drizzle/schema/notes";
+import { EditorView } from "codemirror";
+export type Note = typeof notesTable.$inferSelect;
 
 function Home() {
-  const editorRef = useRef<HTMLElement>(null);
+  const editorRef = useRef<EditorView>(null);
 
   const selectedFileIdx = useRef(0);
   const selectedCommandIdx = useRef(0);
   const [, forceRerender] = useState(0);
-  const filesData = useRef([]);
-  const mode = useRef(null);
+  const filesData = useRef<Note[]>([]);
   const showPallete = useRef(false);
   const deleteFileIdx = useRef(-1);
 
@@ -26,10 +28,12 @@ function Home() {
 
   const toast = useToast();
 
-  const handleKeyDown = async (e) => {
+  const handleKeyDown = async (e: KeyboardEvent) => {
     const key = e.key;
     if (e.altKey === true && key === "Escape") {
-      window.document.activeElement?.blur();
+      if (!window.document.activeElement) return;
+      const el: HTMLElement = window.document.activeElement as HTMLElement;
+      el.blur();
       e.preventDefault();
     }
 
@@ -48,6 +52,8 @@ function Home() {
 
         return;
       }
+
+      if (filesData.current === null) return;
 
       if (selectedFileIdx.current === filesData.current.length - 1) {
         selectedFileIdx.current = 0;
@@ -81,6 +87,7 @@ function Home() {
           filesData.current = [response.data.note[0], ...filesData.current];
         }
         selectedFileIdx.current = 0;
+        if (!editorRef.current) return;
         editorRef.current.focus();
       }
       reRender = true;
@@ -132,6 +139,7 @@ function Home() {
         commandData[selectedCommandIdx.current].action();
         return;
       }
+      if (!editorRef.current) return;
       editorRef.current.focus();
       reRender = true;
     }
@@ -199,9 +207,8 @@ function Home() {
           </div>
         ) : (
           <Editor
-            mode={mode}
             editorRef={editorRef}
-            fileData={filesData.current[selectedFileIdx.current]?.content}
+            fileData={filesData.current[selectedFileIdx.current]?.content || ""}
             selectedFileIdx={selectedFileIdx}
             handleFileDataChange={debounceDataFn}
           />

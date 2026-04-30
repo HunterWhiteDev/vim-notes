@@ -1,15 +1,16 @@
+import { Dispatch, RefObject, SetStateAction } from "react";
 import File from "../components/File";
+import { Note } from "@/screens/Home";
 
 type FileExplorerProps = {
-  openedFileIdx: number;
-  selectedFileIdx: number;
-  files: string[];
+  selectedFileIdx: RefObject<number>;
+  files: Note[];
   deleteFileIdx: number;
+  forceRerender: Dispatch<SetStateAction<number>>;
 };
 
 export default function FileExplorer({
   forceRerender,
-  openedFileIdx,
   selectedFileIdx,
   files,
   deleteFileIdx,
@@ -26,7 +27,6 @@ export default function FileExplorer({
         <File
           forceRerender={forceRerender}
           deleteFileIdx={deleteFileIdx}
-          openedFileIdx={openedFileIdx}
           idx={idx}
           selectedFileIdx={selectedFileIdx}
           file={file}
