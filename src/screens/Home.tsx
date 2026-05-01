@@ -3,7 +3,7 @@ import Editor from "./Editor";
 import api from "../axios";
 import _debounce from "lodash/debounce";
 import Sidebar from "./Sidebar";
-import { commandData } from "../components/CommandPallete";
+import { settingsData } from "../components/Settings";
 import { useSession } from "@/lib/authClient";
 import { AxiosError } from "axios";
 import useToast from "@/hooks/useToast";
@@ -11,15 +11,16 @@ import { Loader } from "lucide-react";
 import { notesTable } from "../../api/drizzle/schema/notes";
 import { EditorView } from "codemirror";
 export type Note = typeof notesTable.$inferSelect;
+export type SettingsActions = "SHOW_VIM_SETTINGS";
 
 function Home() {
   const editorRef = useRef<EditorView>(null);
 
   const selectedFileIdx = useRef(0);
-  const selectedCommandIdx = useRef(0);
+  const selectedSettingIdx = useRef(0);
   const [, forceRerender] = useState(0);
   const filesData = useRef<Note[]>([]);
-  const showPallete = useRef(false);
+  const showSettings = useRef(false);
   const deleteFileIdx = useRef(-1);
 
   const [fetching, setFetching] = useState(false);
@@ -45,34 +46,31 @@ function Home() {
     let reRender = false;
 
     if (key === "j") {
-      if (showPallete.current) {
-        if (selectedCommandIdx.current === commandData.length - 1) {
-          selectedCommandIdx.current = 0;
-        } else selectedCommandIdx.current++;
+      if (showSettings.current) {
+        if (selectedSettingIdx.current === settingsData.length - 1) {
+          selectedSettingIdx.current = 0;
+        } else selectedSettingIdx.current++;
+      } else {
+        if (filesData.current === null) return;
 
-        return;
+        if (selectedFileIdx.current === filesData.current.length - 1) {
+          selectedFileIdx.current = 0;
+        } else selectedFileIdx.current++;
       }
 
-      if (filesData.current === null) return;
-
-      if (selectedFileIdx.current === filesData.current.length - 1) {
-        selectedFileIdx.current = 0;
-      } else selectedFileIdx.current++;
       reRender = true;
     }
 
     if (key === "k") {
-      if (showPallete.current) {
-        if (selectedCommandIdx.current === 0) {
-          selectedCommandIdx.current = commandData.length - 1;
-        } else selectedCommandIdx.current--;
-
-        return;
+      if (showSettings.current) {
+        if (selectedSettingIdx.current === 0) {
+          selectedSettingIdx.current = settingsData.length - 1;
+        } else selectedSettingIdx.current--;
+      } else {
+        if (selectedFileIdx.current === 0) {
+          selectedFileIdx.current = filesData.current.length - 1;
+        } else selectedFileIdx.current--;
       }
-
-      if (selectedFileIdx.current === 0) {
-        selectedFileIdx.current = filesData.current.length - 1;
-      } else selectedFileIdx.current--;
 
       reRender = true;
     }
@@ -135,12 +133,23 @@ function Home() {
     //Cancel logic to delete not
 
     if (key === "Enter") {
-      if (showPallete.current) {
-        commandData[selectedCommandIdx.current].action();
+      if (showSettings.current) {
+        switch (settingsData[selectedSettingIdx.current].action) {
+          case "SHOW_VIM_SETTINGS": {
+            //Do something to update vim settings
+
+            break;
+          }
+        }
         return;
       }
       if (!editorRef.current) return;
       editorRef.current.focus();
+      reRender = true;
+    }
+
+    if (key === "s") {
+      showSettings.current = !showSettings.current;
       reRender = true;
     }
 
@@ -193,10 +202,10 @@ function Home() {
       <div className="w-35">
         <Sidebar
           forceRerender={forceRerender}
-          showPallete={showPallete.current}
+          showSettings={showSettings.current}
           selectedFileIdx={selectedFileIdx}
           files={filesData.current}
-          selectedCommandIdx={selectedCommandIdx.current}
+          selectedSettingIdx={selectedSettingIdx.current}
           deleteFileIdx={deleteFileIdx.current}
         />
       </div>

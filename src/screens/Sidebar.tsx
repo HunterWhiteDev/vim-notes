@@ -1,27 +1,27 @@
 import FileExplorer from "../components/FileExplorer";
-import CommandPallete from "../components/CommandPallete";
-import { Dispatch, Ref, RefObject, SetStateAction } from "react";
+import Settings from "../components/Settings";
+import { Dispatch, RefObject, SetStateAction } from "react";
 import { Note } from "./Home";
 
 interface SidebarProps {
-  showPallete: boolean;
+  showSettings: boolean;
   selectedFileIdx: RefObject<number>;
   files: Note[];
-  selectedCommandIdx: number;
+  selectedSettingIdx: number;
   deleteFileIdx: number;
   forceRerender: Dispatch<SetStateAction<number>>;
 }
 
 export default function Sidebar({
-  showPallete,
+  showSettings,
   selectedFileIdx,
   files,
-  selectedCommandIdx,
+  selectedSettingIdx,
   deleteFileIdx,
   forceRerender,
 }: SidebarProps) {
-  return showPallete ? (
-    <CommandPallete selectedFileIdx={selectedCommandIdx} />
+  return showSettings ? (
+    <Settings selectedSettingIdx={selectedSettingIdx} />
   ) : (
     <FileExplorer
       forceRerender={forceRerender}
