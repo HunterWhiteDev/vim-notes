@@ -1,6 +1,6 @@
 import { Note } from "@/screens/Home";
 import moment from "moment";
-import { Dispatch, RefObject, SetStateAction } from "react";
+import { Dispatch, RefObject, SetStateAction, useRef } from "react";
 
 interface FileProps {
   idx: number;
@@ -17,20 +17,34 @@ export default function File({
   file,
   deleteFileIdx,
 }: FileProps) {
+  //This is just to prevent it scrolling into view when a user clicks on the file. Its a bit jaring.
+  //willScroll is a ref because the if check executes every render.
+  const willScroll = useRef(false);
+  const fileRef = useRef<HTMLDivElement>(null);
+
+  if (selectedFileIdx.current === idx) {
+    if (willScroll.current) {
+      fileRef.current?.scrollIntoView();
+      willScroll.current = true;
+    }
+  }
+
   return (
     <div
-      className={`min-w-30 cursor-pointer border-x-1 border-gray-500 p-1 md:min-w-50 md:border-x-0 md:border-y-1 ${
+      ref={fileRef}
+      className={`h-8 min-w-30 cursor-pointer border-x-1 border-gray-500 md:min-w-50 md:border-x-0 md:border-y-1 ${
         selectedFileIdx.current === idx
           ? "border-blue-500! bg-gray-700 md:border-y-0"
           : null
       } hover:bg-gray-700`}
       onClick={() => {
+        willScroll.current = false;
         selectedFileIdx.current = idx;
         forceRerender((idx) => idx + 1);
       }}
     >
       <div
-        className={`flex cursor-pointer items-center justify-between text-sm text-white`}
+        className={`flex cursor-pointer items-center justify-between text-xs text-white`}
       >
         {file.content?.slice(0, 20) || (
           <span className="text-gray-500">Empty Note</span>
