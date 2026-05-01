@@ -19,26 +19,23 @@ export default function File({
 }: FileProps) {
   //This is just to prevent it scrolling into view when a user clicks on the file. Its a bit jaring.
   //willScroll is a ref because the if check executes every render.
-  const willScroll = useRef(false);
   const fileRef = useRef<HTMLDivElement>(null);
 
+  console.log({ selectedFileIdx: selectedFileIdx.current, idx });
+
   if (selectedFileIdx.current === idx) {
-    if (willScroll.current) {
-      fileRef.current?.scrollIntoView();
-      willScroll.current = true;
-    }
+    fileRef.current?.scrollIntoView();
   }
 
   return (
     <div
       ref={fileRef}
-      className={`h-8 min-w-30 cursor-pointer border-x-1 border-gray-500 md:min-w-50 md:border-x-0 md:border-y-1 ${
+      className={`h-8 cursor-pointer scroll-m-8 border-x-1 border-b-1 border-gray-500 ${
         selectedFileIdx.current === idx
           ? "border-blue-500! bg-gray-700 md:border-y-0"
           : null
       } hover:bg-gray-700`}
       onClick={() => {
-        willScroll.current = false;
         selectedFileIdx.current = idx;
         forceRerender((idx) => idx + 1);
       }}
@@ -46,9 +43,11 @@ export default function File({
       <div
         className={`flex cursor-pointer items-center justify-between text-xs text-white`}
       >
-        {file.content?.slice(0, 20) || (
-          <span className="text-gray-500">Empty Note</span>
-        )}
+        <div className="truncate">
+          {file.content?.slice(0, 50) || (
+            <span className="truncate text-gray-500">Empty Note</span>
+          )}
+        </div>
 
         {deleteFileIdx === idx ? (
           <div className="flex-col items-center justify-center text-center text-xs">

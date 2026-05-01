@@ -189,8 +189,8 @@ function Home() {
   ]);
 
   return (
-    <div className="flex h-screen flex-col bg-gray-900 text-white md:flex-row">
-      <div className="md:w-50">
+    <div className="flex h-screen bg-gray-900 text-white">
+      <div className="w-35">
         <Sidebar
           forceRerender={forceRerender}
           showPallete={showPallete.current}
@@ -202,8 +202,8 @@ function Home() {
       </div>
       <div className="w-full">
         {fetching ? (
-          <div className="animate-spin">
-            <Loader />
+          <div>
+            <Loader className="animate-spin" />
           </div>
         ) : (
           <Editor
