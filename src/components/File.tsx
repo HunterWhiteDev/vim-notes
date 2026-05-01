@@ -30,7 +30,7 @@ export default function File({
   return (
     <div
       ref={fileRef}
-      className={`h-8 cursor-pointer scroll-m-8 border-x-1 border-b-1 border-gray-500 ${
+      className={`h-8 max-w-35 cursor-pointer scroll-m-8 border-x-1 border-b-1 border-gray-500 ${
         selectedFileIdx.current === idx
           ? "border-blue-500! bg-gray-700 md:border-y-0"
           : null

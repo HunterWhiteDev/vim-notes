@@ -97,7 +97,8 @@ export default function Editor({
           </span>
           <span className="p-1">
             alt+escape: focus file explorer | j: move down file | k: move up
-            file | enter: select file. | n: new file | d: delete file
+            file | enter: select file. | n: new file | d: delete file | s:
+            toggle settings
           </span>
         </div>
       </div>

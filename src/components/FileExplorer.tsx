@@ -16,7 +16,7 @@ export default function FileExplorer({
   deleteFileIdx,
 }: FileExplorerProps) {
   return (
-    <div className="h-screen w-full overflow-scroll border-b-2 text-white md:border-r-2">
+    <div className="h-screen overflow-scroll border-b-2 text-white md:border-r-2">
       {files.length === 0 ? (
         <div className="mt-2 px-2 text-center text-gray-400">
           You do not have any notes yet.
