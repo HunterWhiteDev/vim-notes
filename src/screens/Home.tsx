@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, EventHandler } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Editor from "./Editor";
 import api from "../axios";
 import _debounce from "lodash/debounce";
@@ -22,6 +22,8 @@ function Home() {
   const filesData = useRef<Note[]>([]);
   const showSettings = useRef(false);
   const deleteFileIdx = useRef(-1);
+  const showVimConfig = useRef(false);
+  const vimConfig = useRef("");
 
   const [fetching, setFetching] = useState(false);
 
@@ -39,7 +41,10 @@ function Home() {
     }
 
     //This prevents the rest of the listener from firing when we are typing in the editor in isnert mode
-    if (window.document.activeElement?.className.includes("cm-content")) {
+    if (
+      window.document.activeElement?.className.includes("cm-content") ||
+      window.document.activeElement?.tagName === "INPUT"
+    ) {
       return;
     }
 
@@ -136,12 +141,14 @@ function Home() {
       if (showSettings.current) {
         switch (settingsData[selectedSettingIdx.current].action) {
           case "SHOW_VIM_SETTINGS": {
+            console.log("something");
+            showVimConfig.current = true;
+            reRender = true;
             //Do something to update vim settings
 
             break;
           }
         }
-        return;
       }
       if (!editorRef.current) return;
       editorRef.current.focus();
@@ -150,6 +157,7 @@ function Home() {
 
     if (key === "s") {
       showSettings.current = !showSettings.current;
+      if (showVimConfig.current) showVimConfig.current = false;
       reRender = true;
     }
 
@@ -169,6 +177,14 @@ function Home() {
       setFetching(true);
       const response = await api({ url: "/notes", method: "get" });
       filesData.current = response.data.notes;
+
+      const vimConfigResponse = await api({
+        url: "/config/vim",
+        method: "get",
+      });
+
+      vimConfig.current = vimConfigResponse.data[0].content || "";
+
       forceRerender((n) => n + 1);
       setFetching(false);
     };
@@ -197,6 +213,24 @@ function Home() {
     filesData.current,
   ]);
 
+  const handleVimConfigChange = async (input: string) => {
+    try {
+      const response = await api({
+        method: "put",
+        url: `/config/vim`,
+        data: { fileData: input },
+      });
+
+      vimConfig.current = input;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data.message || error.message);
+      }
+    }
+  };
+
+  const debounceVimFn = useCallback(_debounce(handleVimConfigChange, 500), []);
+
   return (
     <div className="flex h-screen bg-gray-900 text-white">
       <div className="w-35">
@@ -214,12 +248,20 @@ function Home() {
           <div>
             <Loader className="animate-spin" />
           </div>
+        ) : showVimConfig.current ? (
+          <Editor
+            editorRef={editorRef}
+            fileData={vimConfig.current}
+            handleFileDataChange={debounceVimFn}
+            vimConfig={vimConfig}
+          />
         ) : (
           <Editor
             editorRef={editorRef}
             fileData={filesData.current[selectedFileIdx.current]?.content || ""}
             selectedFileIdx={selectedFileIdx}
             handleFileDataChange={debounceDataFn}
+            vimConfig={vimConfig}
           />
         )}
       </div>

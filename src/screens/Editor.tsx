@@ -14,7 +14,7 @@ import {
 } from "@codemirror/view";
 import markdownExt from "../extensions/markdown";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
-import { vim } from "@replit/codemirror-vim";
+import { vim, Vim, getCM } from "@replit/codemirror-vim";
 import darkTheme from "@/extensions/darkTheme";
 import onUpdate from "@/extensions/onUpdate";
 import { DebouncedFunc } from "lodash";
@@ -23,8 +23,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 interface EditorProps {
   editorRef: RefObject<EditorView | null>;
   fileData: string;
-  selectedFileIdx: RefObject<number>;
+  selectedFileIdx?: RefObject<number>;
   handleFileDataChange: DebouncedFunc<(e: string) => Promise<void>>;
+  vimConfig: RefObject<string>;
 }
 
 export default function Editor({
@@ -32,6 +33,7 @@ export default function Editor({
   fileData,
   handleFileDataChange,
   selectedFileIdx,
+  vimConfig,
 }: EditorProps) {
   const containerRef = useRef<any>(null);
   const [hasMounted, setHasMounted] = useState(false);
@@ -61,7 +63,13 @@ export default function Editor({
       parent: containerRef.current,
     });
 
+    console.log({ vimConfig: vimConfig.current });
+
     editorRef.current = view;
+
+    //TODO: Run a loop based on the vim config here maping keys
+
+    view.focus();
 
     if (!hasMounted) view.focus();
     setHasMounted(true);
@@ -72,13 +80,23 @@ export default function Editor({
     return () => {
       editorRef?.current?.destroy();
     };
-  }, [selectedFileIdx.current]);
+  }, [selectedFileIdx?.current]);
 
   const handleVimModeChange = (checkedState: boolean) => {
     setUseVim(checkedState);
     editorRef.current?.destroy();
     initVim(checkedState);
   };
+
+  useEffect(() => {
+    Vim.mapclear();
+    for (const line of vimConfig.current.split("\n")) {
+      const splitArr = line.split(" ");
+      if (splitArr[0] === "map") {
+        Vim.map(splitArr[1], splitArr[2], splitArr[3]);
+      }
+    }
+  }, [vimConfig.current]);
 
   return (
     <div className="">

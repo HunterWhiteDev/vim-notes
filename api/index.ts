@@ -5,6 +5,8 @@ import cors from "cors";
 import postNote from "./routes/note/post";
 import updateNote from "./routes/note/update";
 import deleteNote from "./routes/note/delete";
+import getVimConfig from "./routes/config/vim/get";
+import putVimConfig from "./routes/config/vim/put";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth/auth";
 import checkAdminExists from "./lib/utils/checkAdminExists";
@@ -38,6 +40,10 @@ app.get("/notes", getNotes);
 app.post("/note", postNote);
 app.put("/note/:id", updateNote);
 app.delete("/note/:id", deleteNote);
+
+//Config routes
+app.get("/config/vim", getVimConfig);
+app.put("/config/vim", putVimConfig);
 
 app.listen(PORT, () => {
   checkAdminExists();

@@ -20,6 +20,10 @@ const darkTheme = EditorView.theme({
   ".cm-selectionBackground": {
     background: "var(--color-gray-800) !important",
   },
+  ".cm-vim-panel": {
+    background: "var(--color-gray-800)",
+    color: "white",
+  },
 });
 
 export default darkTheme;

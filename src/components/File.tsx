@@ -21,8 +21,6 @@ export default function File({
   //willScroll is a ref because the if check executes every render.
   const fileRef = useRef<HTMLDivElement>(null);
 
-  console.log({ selectedFileIdx: selectedFileIdx.current, idx });
-
   if (selectedFileIdx.current === idx) {
     fileRef.current?.scrollIntoView();
   }
