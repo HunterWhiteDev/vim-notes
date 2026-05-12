@@ -19,6 +19,7 @@ import darkTheme from "@/extensions/darkTheme";
 import onUpdate from "@/extensions/onUpdate";
 import { DebouncedFunc } from "lodash";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Note } from "./Home";
 
 interface EditorProps {
   editorRef: RefObject<EditorView | null>;
@@ -63,13 +64,9 @@ export default function Editor({
       parent: containerRef.current,
     });
 
-    console.log({ vimConfig: vimConfig.current });
-
     editorRef.current = view;
 
     //TODO: Run a loop based on the vim config here maping keys
-
-    view.focus();
 
     if (!hasMounted) view.focus();
     setHasMounted(true);
@@ -80,7 +77,7 @@ export default function Editor({
     return () => {
       editorRef?.current?.destroy();
     };
-  }, [selectedFileIdx?.current]);
+  }, [fileData]);
 
   const handleVimModeChange = (checkedState: boolean) => {
     setUseVim(checkedState);

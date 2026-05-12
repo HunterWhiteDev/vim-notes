@@ -1,15 +1,15 @@
 import FileExplorer from "../components/FileExplorer";
 import Settings from "../components/Settings";
 import { Dispatch, RefObject, SetStateAction } from "react";
-import { Note } from "./Home";
+import { DisplayElement } from "./Home";
 
 interface SidebarProps {
   showSettings: boolean;
   selectedFileIdx: RefObject<number>;
-  files: Note[];
   selectedSettingIdx: number;
   deleteFileIdx: number;
   forceRerender: Dispatch<SetStateAction<number>>;
+  files: RefObject<DisplayElement[]>;
 }
 
 export default function Sidebar({
@@ -17,17 +17,10 @@ export default function Sidebar({
   selectedFileIdx,
   files,
   selectedSettingIdx,
-  deleteFileIdx,
-  forceRerender,
 }: SidebarProps) {
   return showSettings ? (
     <Settings selectedSettingIdx={selectedSettingIdx} />
   ) : (
-    <FileExplorer
-      forceRerender={forceRerender}
-      selectedFileIdx={selectedFileIdx}
-      files={files}
-      deleteFileIdx={deleteFileIdx}
-    />
+    <FileExplorer selectedFileIdx={selectedFileIdx} files={files} />
   );
 }

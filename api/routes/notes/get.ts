@@ -4,6 +4,11 @@ import { notesTable } from "../../drizzle/schema/notes";
 import { desc, eq } from "drizzle-orm";
 import { auth } from "../../lib/auth/auth";
 import { fromNodeHeaders } from "better-auth/node";
+import { inspect } from "util";
+type Note = typeof notesTable.$inferSelect;
+export type DirectoryMap = {
+  [key: string]: Note[];
+};
 
 export default async function (req: Request, res: Response) {
   try {
@@ -23,10 +28,14 @@ export default async function (req: Request, res: Response) {
         id: notesTable.id,
         content: notesTable.content,
         updated_at: notesTable.updated_at,
+        title: notesTable.title,
+        directory: notesTable.directory,
       })
       .from(notesTable)
       .where(eq(notesTable.user_id, userId))
       .orderBy(desc(notesTable.updated_at));
+    console.log(response);
+
     res.status(200).send({ notes: response });
   } catch (error) {
     if (error instanceof Error)

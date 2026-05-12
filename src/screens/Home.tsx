@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, RefObject } from "react";
 import Editor from "./Editor";
 import api from "../axios";
 import _debounce from "lodash/debounce";
@@ -10,8 +10,18 @@ import useToast from "@/hooks/useToast";
 import { Loader } from "lucide-react";
 import { notesTable } from "../../api/drizzle/schema/notes";
 import { EditorView } from "codemirror";
+import { UUID } from "crypto";
 export type Note = typeof notesTable.$inferSelect;
 export type SettingsActions = "SHOW_VIM_SETTINGS";
+
+export type DisplayElement = {
+  directory: string;
+  type: "folder" | "note";
+  offset: number;
+  title: string;
+  content?: string;
+  id: number;
+};
 
 function Home() {
   const editorRef = useRef<EditorView>(null);
@@ -24,6 +34,19 @@ function Home() {
   const deleteFileIdx = useRef(-1);
   const showVimConfig = useRef(false);
   const vimConfig = useRef("");
+
+  const displayArr = useRef<DisplayElement[]>([]);
+  const directoryMap = useRef({ __notes: [] });
+
+  const openFolders = useRef(new Set<number>());
+
+  const selectedFile = useRef(null);
+
+  const folders = useRef([]);
+  const files = useRef([]);
+
+  const currentPath = useRef("/");
+  const previousPath = useRef(null);
 
   const [fetching, setFetching] = useState(false);
 
@@ -56,9 +79,7 @@ function Home() {
           selectedSettingIdx.current = 0;
         } else selectedSettingIdx.current++;
       } else {
-        if (filesData.current === null) return;
-
-        if (selectedFileIdx.current === filesData.current.length - 1) {
+        if (selectedFileIdx.current >= displayArr.current.length - 1) {
           selectedFileIdx.current = 0;
         } else selectedFileIdx.current++;
       }
@@ -73,7 +94,8 @@ function Home() {
         } else selectedSettingIdx.current--;
       } else {
         if (selectedFileIdx.current === 0) {
-          selectedFileIdx.current = filesData.current.length - 1;
+          selectedFileIdx.current = selectedFileIdx.current =
+            displayArr.current.length - 1;
         } else selectedFileIdx.current--;
       }
 
@@ -149,9 +171,19 @@ function Home() {
             break;
           }
         }
+        return;
       }
       if (!editorRef.current) return;
-      editorRef.current.focus();
+
+      const selectedEl = displayArr.current[selectedFileIdx.current];
+      if (selectedEl.type === "folder") {
+        if (!openFolders.current.has(selectedEl.id))
+          openFolder(selectedFileIdx.current);
+        else closeFolder(selectedFileIdx.current);
+      }
+
+      //
+      // editorRef.current.focus();
       reRender = true;
     }
 
@@ -172,11 +204,142 @@ function Home() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  //Adds directories and folders to current display array given the selectedFileIdx
+  const openFolder = (selectedFileIdx: number) => {
+    let selectedEl = displayArr.current[selectedFileIdx];
+    if (!selectedEl)
+      selectedEl = {
+        id: Math.floor(Math.random() * 10),
+        type: "folder",
+        directory: "/",
+        offset: -1,
+        title: "",
+        content: "",
+      };
+
+    if (selectedEl?.type !== "folder")
+      throw new Error("You have called openFolder() on a file");
+
+    const directoryKeys = selectedEl.directory
+      .split("/")
+      .filter((key) => key !== "");
+
+    if (selectedEl.title !== "") directoryKeys.push(selectedEl.title);
+
+    let currentObj = directoryMap.current;
+
+    //If length ===  the we are in the "/" dir and can skip finding the right path, we already know its the base directory
+    if (directoryKeys.length > 0) {
+      for (const key of directoryKeys) {
+        console.log({ key });
+        currentObj = currentObj[key];
+      }
+    }
+
+    //We are building the sub array that will be inserted into displayArr
+    let newDisplayElements: DisplayElement[] = [];
+
+    const folders = Object.keys(currentObj).filter((key) => key !== "__notes");
+
+    const notes = currentObj.__notes;
+
+    const dir = selectedEl.directory + "/" + selectedEl.title;
+
+    //Offset is selectedEl.offset + 1 || 0 because if selectedEl is null we are in root path
+    folders.forEach((folder) => {
+      let numberString = "";
+      for (let i = 0; i < 10; i++) {
+        numberString += Math.floor(Math.random() * 10).toString();
+      }
+
+      console.log({ numberString });
+      newDisplayElements.push({
+        offset: selectedEl.offset + 1 || 0,
+        title: folder,
+        type: "folder",
+        directory: dir,
+        id: parseInt(numberString),
+      });
+    });
+
+    notes.forEach((note: Note) =>
+      newDisplayElements.push({
+        offset: selectedEl.offset + 1 || 0,
+        title: note.title,
+        type: "note",
+        content: note.content || "",
+        directory: dir,
+        id: note.id,
+      }),
+    );
+
+    //Since we are inserting the new elements somewhere in the middle of the array, we calculate the first half, the ending half, when insert in between
+    const start = displayArr.current.slice(0, selectedFileIdx + 1);
+    const end = displayArr.current.slice(
+      selectedFileIdx + 1,
+      displayArr.current.length,
+    );
+
+    const newArr = [...start, ...newDisplayElements, ...end];
+    console.log({ newArr });
+    displayArr.current = newArr;
+
+    openFolders.current.add(selectedEl.id);
+  };
+
+  const closeFolder = (selectedFileIdx: number) => {
+    const selectedEl = displayArr.current[selectedFileIdx];
+
+    let start = displayArr.current.slice(0, selectedFileIdx + 1);
+    let end = displayArr.current
+      .slice(selectedFileIdx + 1, displayArr.current.length)
+      .filter((file) => {
+        if (file.offset <= selectedEl.offset) return true;
+        else return false;
+      });
+
+    openFolders.current.delete(selectedEl.id);
+    displayArr.current = [...start, ...end];
+  };
+
   useEffect(() => {
     const getData = async () => {
       setFetching(true);
+
+      displayArr.current = [];
+      openFolders.current = new Set();
+      directoryMap.current = { __notes: [] };
       const response = await api({ url: "/notes", method: "get" });
-      filesData.current = response.data.notes;
+
+      const notesResponse: Note[] = response.data.notes;
+
+      for (const file of notesResponse) {
+        const dirArr = file.directory.split("/");
+
+        let counter = 0;
+        let currentDir = directoryMap.current;
+
+        if (file.directory === "/") currentDir.__notes.push(file);
+
+        for (const dir of dirArr) {
+          if (dir === "") {
+            counter++;
+            continue;
+          }
+          if (!currentDir[dir]) currentDir[dir] = { __notes: [] };
+
+          currentDir = currentDir[dir];
+          console.log(dir, counter, dirArr.length - 1);
+          if (counter === dirArr.length - 1) currentDir.__notes.push(file);
+
+          counter++;
+        }
+      }
+
+      openFolder(0);
+
+      //This is the json containing the structure in how the fiel explorer will be displayed
+      // const displayArr: DisplayElement[] = [];
 
       const vimConfigResponse = await api({
         url: "/config/vim",
@@ -190,7 +353,7 @@ function Home() {
     };
 
     getData();
-  }, [session]);
+  }, []);
 
   const handleFileDataChange = async (e: string) => {
     try {
@@ -233,14 +396,14 @@ function Home() {
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
-      <div className="w-35">
+      <div className="w-50">
         <Sidebar
           forceRerender={forceRerender}
           showSettings={showSettings.current}
           selectedFileIdx={selectedFileIdx}
-          files={filesData.current}
           selectedSettingIdx={selectedSettingIdx.current}
           deleteFileIdx={deleteFileIdx.current}
+          files={displayArr}
         />
       </div>
       <div className="w-full">
@@ -258,7 +421,7 @@ function Home() {
         ) : (
           <Editor
             editorRef={editorRef}
-            fileData={filesData.current[selectedFileIdx.current]?.content || ""}
+            fileData={selectedFile?.current?.content}
             selectedFileIdx={selectedFileIdx}
             handleFileDataChange={debounceDataFn}
             vimConfig={vimConfig}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect } from "react";
 import { useSession } from "./lib/authClient";
 import { Route, Routes, useNavigate } from "react-router";
 import Home from "./screens/Home";
