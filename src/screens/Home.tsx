@@ -1,77 +1,121 @@
-import { useEffect, useRef, useState, useCallback, RefObject } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Editor from "./Editor";
 import api from "../axios";
 import _debounce from "lodash/debounce";
 import Sidebar from "./Sidebar";
 import { settingsData } from "../components/Settings";
-import { useSession } from "@/lib/authClient";
 import { AxiosError } from "axios";
-import useToast from "@/hooks/useToast";
 import { Loader } from "lucide-react";
 import { notesTable } from "../../api/drizzle/schema/notes";
 import { EditorView } from "codemirror";
-import { UUID } from "crypto";
+import { DirectoryMap } from "@/lib/directoryMap";
 export type Note = typeof notesTable.$inferSelect;
 export type SettingsActions = "SHOW_VIM_SETTINGS";
+export type FocusedElement = "FileExplorer" | "Editor";
 
-export type DisplayElement = {
-  directory: string;
-  type: "folder" | "note";
-  offset: number;
-  title: string;
-  content?: string;
-  id: number;
-};
 
 function Home() {
   const editorRef = useRef<EditorView>(null);
 
+  const directoryMap = useRef<DirectoryMap>(new DirectoryMap([]));
+  const openedFile = useRef<Note>(null);
+
+
   const selectedFileIdx = useRef(0);
   const selectedSettingIdx = useRef(0);
+  const confirmingDelete = useRef(false);
+
+
+
   const [, forceRerender] = useState(0);
-  const filesData = useRef<Note[]>([]);
   const showSettings = useRef(false);
-  const deleteFileIdx = useRef(-1);
   const showVimConfig = useRef(false);
   const vimConfig = useRef("");
 
-  const displayArr = useRef<DisplayElement[]>([]);
-  const directoryMap = useRef({ __notes: [] });
 
-  const openFolders = useRef(new Set<number>());
 
-  const selectedFile = useRef(null);
+  const focusedElement = useRef<FocusedElement>("FileExplorer");
 
-  const folders = useRef([]);
-  const files = useRef([]);
+  const creatingFileIdx = useRef(-1);
+  const creatingFilePath = useRef("");
 
-  const currentPath = useRef("/");
-  const previousPath = useRef(null);
+  const ignoreInput = useRef(true);
 
   const [fetching, setFetching] = useState(false);
 
-  const session = useSession();
 
-  const toast = useToast();
 
   const handleKeyDown = async (e: KeyboardEvent) => {
+    let reRender = false;
     const key = e.key;
     if (e.altKey === true && key === "Escape") {
-      if (!window.document.activeElement) return;
       const el: HTMLElement = window.document.activeElement as HTMLElement;
       el.blur();
       e.preventDefault();
-    }
-
-    //This prevents the rest of the listener from firing when we are typing in the editor in isnert mode
-    if (
-      window.document.activeElement?.className.includes("cm-content") ||
-      window.document.activeElement?.tagName === "INPUT"
-    ) {
+      focusedElement.current = "FileExplorer";
+      forceRerender((num) => num + 1);
       return;
     }
 
-    let reRender = false;
+
+    //This prevents the rest of the listener from firing when we are typing in the editor in isnert mode
+    if (
+      window.document.activeElement?.className.includes("cm-content")
+    ) {
+      focusedElement.current = "Editor";
+      return;
+    } else {
+      focusedElement.current = "FileExplorer";
+      reRender = true;
+    }
+
+    if (key === "Enter") {
+      if (showSettings.current) {
+        switch (settingsData[selectedSettingIdx.current].action) {
+          case "SHOW_VIM_SETTINGS": {
+            showVimConfig.current = true;
+            reRender = true;
+            //Do something to update vim settings
+
+            break;
+          }
+        }
+        return;
+      } else if (creatingFileIdx.current > -1) {
+        creatingFileIdx.current = -1;
+
+        const directoryArr = creatingFilePath.current
+          .split("/")
+          .filter((str) => str !== "");
+        const title = directoryArr.pop() || "";
+        const directory = "/" + directoryArr.join("/");
+
+        await directoryMap.current.createNote(directory, title);
+
+        forceRerender((num) => num + 1);
+        return;
+      }
+
+
+      //Handle opening/closing folders
+      const selectedEl = directoryMap.current.getDisplayElementByIndex(selectedFileIdx.current);
+      if (selectedEl.type === "folder") {
+        if (directoryMap.current.openFolders.has(selectedEl.id)) directoryMap.current.closeFolder(selectedFileIdx.current)
+        else
+          directoryMap.current.openFolder(selectedFileIdx.current);
+      } else {
+        editorRef.current?.focus();
+
+        const selectedNote = directoryMap.current.getNoteByDisplayIndex(selectedFileIdx.current);
+        openedFile.current = selectedNote;
+
+        focusedElement.current = "Editor";
+      }
+    }
+
+    if (creatingFileIdx.current > -1) {
+      return;
+    }
 
     if (key === "j") {
       if (showSettings.current) {
@@ -79,7 +123,7 @@ function Home() {
           selectedSettingIdx.current = 0;
         } else selectedSettingIdx.current++;
       } else {
-        if (selectedFileIdx.current >= displayArr.current.length - 1) {
+        if (selectedFileIdx.current >= directoryMap.current.displayLayout.length - 1) {
           selectedFileIdx.current = 0;
         } else selectedFileIdx.current++;
       }
@@ -95,7 +139,7 @@ function Home() {
       } else {
         if (selectedFileIdx.current === 0) {
           selectedFileIdx.current = selectedFileIdx.current =
-            displayArr.current.length - 1;
+            directoryMap.current.displayLayout.length - 1;
         } else selectedFileIdx.current--;
       }
 
@@ -104,88 +148,56 @@ function Home() {
 
     //Create New Note or Cancel Delete
     if (key === "n") {
-      if (deleteFileIdx.current !== -1) {
-        deleteFileIdx.current = -1;
+      if (confirmingDelete.current) {
+        //cancel delete
+        confirmingDelete.current = false;
       } else {
-        const response = await api({ url: "/note", method: "post" });
-        if (response.status === 200) {
-          filesData.current = [response.data.note[0], ...filesData.current];
-        }
-        selectedFileIdx.current = 0;
-        if (!editorRef.current) return;
-        editorRef.current.focus();
+        //If we dont do this unconvential boolean check, the keyboard event listener appends "n" char to the start of the creatingFilePath string
+        ignoreInput.current = true;
+
+        const selectedEl = directoryMap.current.getDisplayElementByIndex(selectedFileIdx.current)
+        let creatingPath = "";
+        if (selectedEl)
+          creatingPath = selectedEl.directory
+
+            .split("/")
+            .filter((str) => str !== "")
+            .join("/");
+
+        creatingFilePath.current = creatingPath;
+        creatingFileIdx.current = selectedFileIdx.current || 0;
       }
       reRender = true;
     }
 
     //Delete note
     if (key === "d") {
-      deleteFileIdx.current = selectedFileIdx.current;
+      confirmingDelete.current = true;
       reRender = true;
     }
 
     //Do logic to delete note
     if (key === "y") {
-      if (deleteFileIdx.current === -1) return;
+      reRender = true;
+      if (confirmingDelete.current === false) return;
 
-      const response = await api({
-        url: `/note/${filesData.current[deleteFileIdx.current].id}`,
-        method: "delete",
-      });
-      if (response.status === 200) {
-        filesData.current = filesData.current.filter((note) => {
-          if (note.id === filesData.current[deleteFileIdx.current].id)
-            return false;
-          return true;
-        });
-        reRender = true;
+      const selectedFile = directoryMap.current.getDisplayElementByIndex(selectedFileIdx.current)
 
-        //If we delete the last file set the selected file to previous file in the array
-        if (
-          deleteFileIdx.current + 1 === filesData.current.length &&
-          filesData.current.length > 2
-        ) {
-          selectedFileIdx.current = deleteFileIdx.current - 1;
-        }
-
-        // //Do the inverse if we delete the first file
-        // if (deleteFileIdx.current === 0) {
-        //   selectedFileIdx.current = ;
-        // }
-
-        deleteFileIdx.current = -1;
+      if (selectedFile.type == "note") {
+        await directoryMap.current.deleteNote(selectedFileIdx.current);
+      } else if (selectedFile.type === "folder") {
+        await directoryMap.current.deleteFolder(selectedFileIdx.current);
+      } else {
+        console.error("Error deleting directory");
       }
+
+
+      if (selectedFileIdx.current > 0) selectedFileIdx.current = selectedFileIdx.current - 1
+
+      confirmingDelete.current = false;
     }
 
     //Cancel logic to delete not
-
-    if (key === "Enter") {
-      if (showSettings.current) {
-        switch (settingsData[selectedSettingIdx.current].action) {
-          case "SHOW_VIM_SETTINGS": {
-            console.log("something");
-            showVimConfig.current = true;
-            reRender = true;
-            //Do something to update vim settings
-
-            break;
-          }
-        }
-        return;
-      }
-      if (!editorRef.current) return;
-
-      const selectedEl = displayArr.current[selectedFileIdx.current];
-      if (selectedEl.type === "folder") {
-        if (!openFolders.current.has(selectedEl.id))
-          openFolder(selectedFileIdx.current);
-        else closeFolder(selectedFileIdx.current);
-      }
-
-      //
-      // editorRef.current.focus();
-      reRender = true;
-    }
 
     if (key === "s") {
       showSettings.current = !showSettings.current;
@@ -198,6 +210,8 @@ function Home() {
     }
   };
 
+
+
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
 
@@ -205,141 +219,17 @@ function Home() {
   }, []);
 
   //Adds directories and folders to current display array given the selectedFileIdx
-  const openFolder = (selectedFileIdx: number) => {
-    let selectedEl = displayArr.current[selectedFileIdx];
-    if (!selectedEl)
-      selectedEl = {
-        id: Math.floor(Math.random() * 10),
-        type: "folder",
-        directory: "/",
-        offset: -1,
-        title: "",
-        content: "",
-      };
 
-    if (selectedEl?.type !== "folder")
-      throw new Error("You have called openFolder() on a file");
-
-    const directoryKeys = selectedEl.directory
-      .split("/")
-      .filter((key) => key !== "");
-
-    if (selectedEl.title !== "") directoryKeys.push(selectedEl.title);
-
-    let currentObj = directoryMap.current;
-
-    //If length ===  the we are in the "/" dir and can skip finding the right path, we already know its the base directory
-    if (directoryKeys.length > 0) {
-      for (const key of directoryKeys) {
-        console.log({ key });
-        currentObj = currentObj[key];
-      }
-    }
-
-    //We are building the sub array that will be inserted into displayArr
-    let newDisplayElements: DisplayElement[] = [];
-
-    const folders = Object.keys(currentObj).filter((key) => key !== "__notes");
-
-    const notes = currentObj.__notes;
-
-    const dir = selectedEl.directory + "/" + selectedEl.title;
-
-    //Offset is selectedEl.offset + 1 || 0 because if selectedEl is null we are in root path
-    folders.forEach((folder) => {
-      let numberString = "";
-      for (let i = 0; i < 10; i++) {
-        numberString += Math.floor(Math.random() * 10).toString();
-      }
-
-      console.log({ numberString });
-      newDisplayElements.push({
-        offset: selectedEl.offset + 1 || 0,
-        title: folder,
-        type: "folder",
-        directory: dir,
-        id: parseInt(numberString),
-      });
-    });
-
-    notes.forEach((note: Note) =>
-      newDisplayElements.push({
-        offset: selectedEl.offset + 1 || 0,
-        title: note.title,
-        type: "note",
-        content: note.content || "",
-        directory: dir,
-        id: note.id,
-      }),
-    );
-
-    //Since we are inserting the new elements somewhere in the middle of the array, we calculate the first half, the ending half, when insert in between
-    const start = displayArr.current.slice(0, selectedFileIdx + 1);
-    const end = displayArr.current.slice(
-      selectedFileIdx + 1,
-      displayArr.current.length,
-    );
-
-    const newArr = [...start, ...newDisplayElements, ...end];
-    console.log({ newArr });
-    displayArr.current = newArr;
-
-    openFolders.current.add(selectedEl.id);
-  };
-
-  const closeFolder = (selectedFileIdx: number) => {
-    const selectedEl = displayArr.current[selectedFileIdx];
-
-    let start = displayArr.current.slice(0, selectedFileIdx + 1);
-    let end = displayArr.current
-      .slice(selectedFileIdx + 1, displayArr.current.length)
-      .filter((file) => {
-        if (file.offset <= selectedEl.offset) return true;
-        else return false;
-      });
-
-    openFolders.current.delete(selectedEl.id);
-    displayArr.current = [...start, ...end];
-  };
 
   useEffect(() => {
     const getData = async () => {
       setFetching(true);
 
-      displayArr.current = [];
-      openFolders.current = new Set();
-      directoryMap.current = { __notes: [] };
       const response = await api({ url: "/notes", method: "get" });
 
-      const notesResponse: Note[] = response.data.notes;
-
-      for (const file of notesResponse) {
-        const dirArr = file.directory.split("/");
-
-        let counter = 0;
-        let currentDir = directoryMap.current;
-
-        if (file.directory === "/") currentDir.__notes.push(file);
-
-        for (const dir of dirArr) {
-          if (dir === "") {
-            counter++;
-            continue;
-          }
-          if (!currentDir[dir]) currentDir[dir] = { __notes: [] };
-
-          currentDir = currentDir[dir];
-          console.log(dir, counter, dirArr.length - 1);
-          if (counter === dirArr.length - 1) currentDir.__notes.push(file);
-
-          counter++;
-        }
-      }
-
-      openFolder(0);
-
-      //This is the json containing the structure in how the fiel explorer will be displayed
-      // const displayArr: DisplayElement[] = [];
+      const notes: Note[] = response.data.notes;
+      console.log({ notes });
+      directoryMap.current = new DirectoryMap(notes);
 
       const vimConfigResponse = await api({
         url: "/config/vim",
@@ -356,10 +246,11 @@ function Home() {
   }, []);
 
   const handleFileDataChange = async (e: string) => {
+    if (!openedFile.current) return;
     try {
       const response = await api({
         method: "put",
-        url: `/note/${filesData.current[selectedFileIdx.current].id}`,
+        url: `/note/${openedFile.current.id}`,
         data: { fileData: e },
       });
     } catch (error) {
@@ -368,12 +259,15 @@ function Home() {
       }
     }
 
-    filesData.current[selectedFileIdx.current].content = e;
-    filesData.current[selectedFileIdx.current].updated_at = new Date();
+    const selectedNote = directoryMap.current.getNoteByDisplayIndex(selectedFileIdx.current) as Note;
+    selectedNote.content = e;
+
+    // filesData.current[selectedFileIdx.current].content = e;
+    // filesData.current[selectedFileIdx.current].updated_at = new Date();
   };
 
   const debounceDataFn = useCallback(_debounce(handleFileDataChange, 500), [
-    filesData.current,
+    openedFile.current,
   ]);
 
   const handleVimConfigChange = async (input: string) => {
@@ -396,14 +290,20 @@ function Home() {
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
-      <div className="w-50">
+      <div
+        className={`w-50 border-2 border-transparent ${focusedElement.current === "FileExplorer" ? "border-blue-500!" : null}`}
+      >
         <Sidebar
-          forceRerender={forceRerender}
           showSettings={showSettings.current}
           selectedFileIdx={selectedFileIdx}
           selectedSettingIdx={selectedSettingIdx.current}
-          deleteFileIdx={deleteFileIdx.current}
-          files={displayArr}
+          files={directoryMap.current.displayLayout}
+          openFolders={directoryMap.current.openFolders}
+          creatingFileIdx={creatingFileIdx}
+          creatingFilePath={creatingFilePath}
+          forceRerender={forceRerender}
+          ignoreInput={ignoreInput}
+          confirmingDelete={confirmingDelete}
         />
       </div>
       <div className="w-full">
@@ -412,20 +312,35 @@ function Home() {
             <Loader className="animate-spin" />
           </div>
         ) : showVimConfig.current ? (
-          <Editor
-            editorRef={editorRef}
-            fileData={vimConfig.current}
-            handleFileDataChange={debounceVimFn}
-            vimConfig={vimConfig}
-          />
+          <div
+            className={`border-2 border-transparent ${focusedElement.current === "Editor" ? "border-blue-500!" : null}`}
+          >
+            <Editor
+              editorRef={editorRef}
+              fileData={vimConfig.current}
+              handleFileDataChange={debounceVimFn}
+              vimConfig={vimConfig}
+            />
+          </div>
+        ) : openedFile.current ? (
+          <div
+            className={`border-2 border-transparent ${focusedElement.current === "Editor" ? "border-blue-500!" : null}`}
+          >
+            <Editor
+              openedFile={openedFile.current}
+              editorRef={editorRef}
+              fileData={openedFile.current?.content || ""}
+              selectedFileIdx={selectedFileIdx}
+              handleFileDataChange={debounceDataFn}
+              vimConfig={vimConfig}
+            />
+          </div>
         ) : (
-          <Editor
-            editorRef={editorRef}
-            fileData={selectedFile?.current?.content}
-            selectedFileIdx={selectedFileIdx}
-            handleFileDataChange={debounceDataFn}
-            vimConfig={vimConfig}
-          />
+          <div className="flex h-full items-center justify-center">
+            <div className="text-lg text-gray-300">
+              Open a note to get started
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -10,7 +10,7 @@ export type DirectoryMap = {
   [key: string]: Note[];
 };
 
-export default async function (req: Request, res: Response) {
+export default async function(req: Request, res: Response) {
   try {
     const session = await auth.api.getSession({
       headers: fromNodeHeaders(req.headers),
@@ -34,7 +34,6 @@ export default async function (req: Request, res: Response) {
       .from(notesTable)
       .where(eq(notesTable.user_id, userId))
       .orderBy(desc(notesTable.updated_at));
-    console.log(response);
 
     res.status(200).send({ notes: response });
   } catch (error) {

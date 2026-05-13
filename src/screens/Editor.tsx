@@ -27,9 +27,11 @@ interface EditorProps {
   selectedFileIdx?: RefObject<number>;
   handleFileDataChange: DebouncedFunc<(e: string) => Promise<void>>;
   vimConfig: RefObject<string>;
+  openedFile: Note;
 }
 
 export default function Editor({
+  openedFile,
   editorRef,
   fileData,
   handleFileDataChange,
@@ -66,18 +68,17 @@ export default function Editor({
 
     editorRef.current = view;
 
-    //TODO: Run a loop based on the vim config here maping keys
-
-    if (!hasMounted) view.focus();
+    view.focus();
     setHasMounted(true);
   };
 
   useEffect(() => {
+    console.log("id change");
     initVim(useVim);
     return () => {
       editorRef?.current?.destroy();
     };
-  }, [fileData]);
+  }, [openedFile?.id]);
 
   const handleVimModeChange = (checkedState: boolean) => {
     setUseVim(checkedState);
@@ -96,7 +97,7 @@ export default function Editor({
   }, [vimConfig.current]);
 
   return (
-    <div className="">
+    <div className="z-0!">
       <div className="max-h-[96vh] overflow-scroll">
         <div ref={containerRef} className="cursor-text!"></div>
       </div>
