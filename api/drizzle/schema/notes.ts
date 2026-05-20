@@ -9,4 +9,6 @@ export const notesTable = pgTable("notes", {
     .$onUpdate(() => new Date())
     .notNull(),
   user_id: text().references(() => user.id),
+  title: text().notNull(),
+  directory: text().default("/").notNull(),
 });

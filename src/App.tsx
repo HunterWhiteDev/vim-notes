@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect } from "react";
 import { useSession } from "./lib/authClient";
 import { Route, Routes, useNavigate } from "react-router";
 import Home from "./screens/Home";
 import Login from "./screens/Login";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 function App() {
   const auth = useSession();
@@ -21,9 +21,16 @@ function App() {
     }
   }, [auth]);
 
+
+
   return (
     <div className="h-screen w-screen bg-gray-900 text-white">
-      <Toaster />
+      <Toaster toastOptions={{
+        style: {
+          backgroundColor: "oklch(37.3% 0.034 259.733)",
+          color: "white"
+        }
+      }} />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />

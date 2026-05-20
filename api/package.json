@@ -9,7 +9,8 @@
   "scripts": {
     "test": "npm run dev",
     "dev": "npm run push && tsx --watch index.ts",
-    "push": "npx drizzle-kit push"
+    "push": "npx drizzle-kit push",
+    "studio": "npx drizzle-kit studio"
   },
   "dependencies": {
     "@types/cors": "^2.8.19",

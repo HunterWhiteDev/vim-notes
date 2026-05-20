@@ -19,6 +19,7 @@ import darkTheme from "@/extensions/darkTheme";
 import onUpdate from "@/extensions/onUpdate";
 import { DebouncedFunc } from "lodash";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Note } from "./Home";
 
 interface EditorProps {
   editorRef: RefObject<EditorView | null>;
@@ -26,9 +27,11 @@ interface EditorProps {
   selectedFileIdx?: RefObject<number>;
   handleFileDataChange: DebouncedFunc<(e: string) => Promise<void>>;
   vimConfig: RefObject<string>;
+  openedFile: Note;
 }
 
 export default function Editor({
+  openedFile,
   editorRef,
   fileData,
   handleFileDataChange,
@@ -63,24 +66,19 @@ export default function Editor({
       parent: containerRef.current,
     });
 
-    console.log({ vimConfig: vimConfig.current });
-
     editorRef.current = view;
 
-    //TODO: Run a loop based on the vim config here maping keys
-
     view.focus();
-
-    if (!hasMounted) view.focus();
     setHasMounted(true);
   };
 
   useEffect(() => {
+    console.log("id change");
     initVim(useVim);
     return () => {
       editorRef?.current?.destroy();
     };
-  }, [selectedFileIdx?.current]);
+  }, [openedFile?.id]);
 
   const handleVimModeChange = (checkedState: boolean) => {
     setUseVim(checkedState);
@@ -99,7 +97,7 @@ export default function Editor({
   }, [vimConfig.current]);
 
   return (
-    <div className="">
+    <div className="z-0!">
       <div className="max-h-[96vh] overflow-scroll">
         <div ref={containerRef} className="cursor-text!"></div>
       </div>

@@ -11,6 +11,7 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth/auth";
 import checkAdminExists from "./lib/utils/checkAdminExists";
 import signUp from "./middleware/signUp";
+import deleteDirectory from "./routes/directories/delete";
 dotenv.config();
 
 const PORT = process.env.EXPRESS_PORT;
@@ -40,6 +41,9 @@ app.get("/notes", getNotes);
 app.post("/note", postNote);
 app.put("/note/:id", updateNote);
 app.delete("/note/:id", deleteNote);
+
+//Directory Routes
+app.delete("/directory", deleteDirectory);
 
 //Config routes
 app.get("/config/vim", getVimConfig);

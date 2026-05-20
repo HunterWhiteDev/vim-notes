@@ -4,51 +4,118 @@ import api from "../axios";
 import _debounce from "lodash/debounce";
 import Sidebar from "./Sidebar";
 import { settingsData } from "../components/Settings";
-import { useSession } from "@/lib/authClient";
 import { AxiosError } from "axios";
-import useToast from "@/hooks/useToast";
 import { Loader } from "lucide-react";
 import { notesTable } from "../../api/drizzle/schema/notes";
 import { EditorView } from "codemirror";
+import { DirectoryMap } from "@/lib/directoryMap";
 export type Note = typeof notesTable.$inferSelect;
 export type SettingsActions = "SHOW_VIM_SETTINGS";
+export type FocusedElement = "FileExplorer" | "Editor";
+
 
 function Home() {
   const editorRef = useRef<EditorView>(null);
 
+  const directoryMap = useRef<DirectoryMap>(new DirectoryMap([]));
+  const openedFile = useRef<Note>(null);
+
+
   const selectedFileIdx = useRef(0);
   const selectedSettingIdx = useRef(0);
+  const confirmingDelete = useRef(false);
+
+
+
   const [, forceRerender] = useState(0);
-  const filesData = useRef<Note[]>([]);
   const showSettings = useRef(false);
-  const deleteFileIdx = useRef(-1);
   const showVimConfig = useRef(false);
   const vimConfig = useRef("");
 
+
+
+  const focusedElement = useRef<FocusedElement>("FileExplorer");
+
+  const creatingFileIdx = useRef(-1);
+  const creatingFilePath = useRef("");
+
+  const ignoreInput = useRef(true);
+
   const [fetching, setFetching] = useState(false);
 
-  const session = useSession();
 
-  const toast = useToast();
 
   const handleKeyDown = async (e: KeyboardEvent) => {
+    let reRender = false;
     const key = e.key;
     if (e.altKey === true && key === "Escape") {
-      if (!window.document.activeElement) return;
       const el: HTMLElement = window.document.activeElement as HTMLElement;
       el.blur();
       e.preventDefault();
-    }
-
-    //This prevents the rest of the listener from firing when we are typing in the editor in isnert mode
-    if (
-      window.document.activeElement?.className.includes("cm-content") ||
-      window.document.activeElement?.tagName === "INPUT"
-    ) {
+      focusedElement.current = "FileExplorer";
+      forceRerender((num) => num + 1);
       return;
     }
 
-    let reRender = false;
+
+    //This prevents the rest of the listener from firing when we are typing in the editor in isnert mode
+    if (
+      window.document.activeElement?.className.includes("cm-content")
+    ) {
+      focusedElement.current = "Editor";
+      return;
+    } else {
+      focusedElement.current = "FileExplorer";
+      reRender = true;
+    }
+
+    if (key === "Enter") {
+      if (showSettings.current) {
+        switch (settingsData[selectedSettingIdx.current].action) {
+          case "SHOW_VIM_SETTINGS": {
+            showVimConfig.current = true;
+            reRender = true;
+            //Do something to update vim settings
+
+            break;
+          }
+        }
+        return;
+      } else if (creatingFileIdx.current > -1) {
+        creatingFileIdx.current = -1;
+
+        const directoryArr = creatingFilePath.current
+          .split("/")
+          .filter((str) => str !== "");
+        const title = directoryArr.pop() || "";
+        const directory = "/" + directoryArr.join("/");
+
+        await directoryMap.current.createNote(directory, title);
+
+        forceRerender((num) => num + 1);
+        return;
+      }
+
+
+      //Handle opening/closing folders
+      const selectedEl = directoryMap.current.getDisplayElementByIndex(selectedFileIdx.current);
+      if (selectedEl.type === "folder") {
+        if (directoryMap.current.openFolders.has(selectedEl.id)) directoryMap.current.closeFolder(selectedFileIdx.current)
+        else
+          directoryMap.current.openFolder(selectedFileIdx.current);
+      } else {
+        editorRef.current?.focus();
+
+        const selectedNote = directoryMap.current.getNoteByDisplayIndex(selectedFileIdx.current);
+        openedFile.current = selectedNote;
+
+        focusedElement.current = "Editor";
+      }
+    }
+
+    if (creatingFileIdx.current > -1) {
+      return;
+    }
 
     if (key === "j") {
       if (showSettings.current) {
@@ -56,9 +123,7 @@ function Home() {
           selectedSettingIdx.current = 0;
         } else selectedSettingIdx.current++;
       } else {
-        if (filesData.current === null) return;
-
-        if (selectedFileIdx.current === filesData.current.length - 1) {
+        if (selectedFileIdx.current >= directoryMap.current.displayLayout.length - 1) {
           selectedFileIdx.current = 0;
         } else selectedFileIdx.current++;
       }
@@ -73,7 +138,8 @@ function Home() {
         } else selectedSettingIdx.current--;
       } else {
         if (selectedFileIdx.current === 0) {
-          selectedFileIdx.current = filesData.current.length - 1;
+          selectedFileIdx.current = selectedFileIdx.current =
+            directoryMap.current.displayLayout.length - 1;
         } else selectedFileIdx.current--;
       }
 
@@ -82,78 +148,56 @@ function Home() {
 
     //Create New Note or Cancel Delete
     if (key === "n") {
-      if (deleteFileIdx.current !== -1) {
-        deleteFileIdx.current = -1;
+      if (confirmingDelete.current) {
+        //cancel delete
+        confirmingDelete.current = false;
       } else {
-        const response = await api({ url: "/note", method: "post" });
-        if (response.status === 200) {
-          filesData.current = [response.data.note[0], ...filesData.current];
-        }
-        selectedFileIdx.current = 0;
-        if (!editorRef.current) return;
-        editorRef.current.focus();
+        //If we dont do this unconvential boolean check, the keyboard event listener appends "n" char to the start of the creatingFilePath string
+        ignoreInput.current = true;
+
+        const selectedEl = directoryMap.current.getDisplayElementByIndex(selectedFileIdx.current)
+        let creatingPath = "";
+        if (selectedEl)
+          creatingPath = selectedEl.directory
+
+            .split("/")
+            .filter((str) => str !== "")
+            .join("/");
+
+        creatingFilePath.current = creatingPath;
+        creatingFileIdx.current = selectedFileIdx.current || 0;
       }
       reRender = true;
     }
 
     //Delete note
     if (key === "d") {
-      deleteFileIdx.current = selectedFileIdx.current;
+      confirmingDelete.current = true;
       reRender = true;
     }
 
     //Do logic to delete note
     if (key === "y") {
-      if (deleteFileIdx.current === -1) return;
+      reRender = true;
+      if (confirmingDelete.current === false) return;
 
-      const response = await api({
-        url: `/note/${filesData.current[deleteFileIdx.current].id}`,
-        method: "delete",
-      });
-      if (response.status === 200) {
-        filesData.current = filesData.current.filter((note) => {
-          if (note.id === filesData.current[deleteFileIdx.current].id)
-            return false;
-          return true;
-        });
-        reRender = true;
+      const selectedFile = directoryMap.current.getDisplayElementByIndex(selectedFileIdx.current)
 
-        //If we delete the last file set the selected file to previous file in the array
-        if (
-          deleteFileIdx.current + 1 === filesData.current.length &&
-          filesData.current.length > 2
-        ) {
-          selectedFileIdx.current = deleteFileIdx.current - 1;
-        }
-
-        // //Do the inverse if we delete the first file
-        // if (deleteFileIdx.current === 0) {
-        //   selectedFileIdx.current = ;
-        // }
-
-        deleteFileIdx.current = -1;
+      if (selectedFile.type == "note") {
+        await directoryMap.current.deleteNote(selectedFileIdx.current);
+      } else if (selectedFile.type === "folder") {
+        await directoryMap.current.deleteFolder(selectedFileIdx.current);
+      } else {
+        console.error("Error deleting directory");
       }
+
+
+      if (selectedFileIdx.current > 0) selectedFileIdx.current = selectedFileIdx.current - 1
+
+      confirmingDelete.current = false;
     }
 
     //Cancel logic to delete not
-
-    if (key === "Enter") {
-      if (showSettings.current) {
-        switch (settingsData[selectedSettingIdx.current].action) {
-          case "SHOW_VIM_SETTINGS": {
-            console.log("something");
-            showVimConfig.current = true;
-            reRender = true;
-            //Do something to update vim settings
-
-            break;
-          }
-        }
-      }
-      if (!editorRef.current) return;
-      editorRef.current.focus();
-      reRender = true;
-    }
 
     if (key === "s") {
       showSettings.current = !showSettings.current;
@@ -166,17 +210,26 @@ function Home() {
     }
   };
 
+
+
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  //Adds directories and folders to current display array given the selectedFileIdx
+
+
   useEffect(() => {
     const getData = async () => {
       setFetching(true);
+
       const response = await api({ url: "/notes", method: "get" });
-      filesData.current = response.data.notes;
+
+      const notes: Note[] = response.data.notes;
+      console.log({ notes });
+      directoryMap.current = new DirectoryMap(notes);
 
       const vimConfigResponse = await api({
         url: "/config/vim",
@@ -190,13 +243,14 @@ function Home() {
     };
 
     getData();
-  }, [session]);
+  }, []);
 
   const handleFileDataChange = async (e: string) => {
+    if (!openedFile.current) return;
     try {
       const response = await api({
         method: "put",
-        url: `/note/${filesData.current[selectedFileIdx.current].id}`,
+        url: `/note/${openedFile.current.id}`,
         data: { fileData: e },
       });
     } catch (error) {
@@ -205,12 +259,15 @@ function Home() {
       }
     }
 
-    filesData.current[selectedFileIdx.current].content = e;
-    filesData.current[selectedFileIdx.current].updated_at = new Date();
+    const selectedNote = directoryMap.current.getNoteByDisplayIndex(selectedFileIdx.current) as Note;
+    selectedNote.content = e;
+
+    // filesData.current[selectedFileIdx.current].content = e;
+    // filesData.current[selectedFileIdx.current].updated_at = new Date();
   };
 
   const debounceDataFn = useCallback(_debounce(handleFileDataChange, 500), [
-    filesData.current,
+    openedFile.current,
   ]);
 
   const handleVimConfigChange = async (input: string) => {
@@ -233,14 +290,20 @@ function Home() {
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
-      <div className="w-35">
+      <div
+        className={`w-50 border-2 border-transparent ${focusedElement.current === "FileExplorer" ? "border-blue-500!" : null}`}
+      >
         <Sidebar
-          forceRerender={forceRerender}
           showSettings={showSettings.current}
           selectedFileIdx={selectedFileIdx}
-          files={filesData.current}
           selectedSettingIdx={selectedSettingIdx.current}
-          deleteFileIdx={deleteFileIdx.current}
+          files={directoryMap.current.displayLayout}
+          openFolders={directoryMap.current.openFolders}
+          creatingFileIdx={creatingFileIdx}
+          creatingFilePath={creatingFilePath}
+          forceRerender={forceRerender}
+          ignoreInput={ignoreInput}
+          confirmingDelete={confirmingDelete}
         />
       </div>
       <div className="w-full">
@@ -249,20 +312,35 @@ function Home() {
             <Loader className="animate-spin" />
           </div>
         ) : showVimConfig.current ? (
-          <Editor
-            editorRef={editorRef}
-            fileData={vimConfig.current}
-            handleFileDataChange={debounceVimFn}
-            vimConfig={vimConfig}
-          />
+          <div
+            className={`border-2 border-transparent ${focusedElement.current === "Editor" ? "border-blue-500!" : null}`}
+          >
+            <Editor
+              editorRef={editorRef}
+              fileData={vimConfig.current}
+              handleFileDataChange={debounceVimFn}
+              vimConfig={vimConfig}
+            />
+          </div>
+        ) : openedFile.current ? (
+          <div
+            className={`border-2 border-transparent ${focusedElement.current === "Editor" ? "border-blue-500!" : null}`}
+          >
+            <Editor
+              openedFile={openedFile.current}
+              editorRef={editorRef}
+              fileData={openedFile.current?.content || ""}
+              selectedFileIdx={selectedFileIdx}
+              handleFileDataChange={debounceDataFn}
+              vimConfig={vimConfig}
+            />
+          </div>
         ) : (
-          <Editor
-            editorRef={editorRef}
-            fileData={filesData.current[selectedFileIdx.current]?.content || ""}
-            selectedFileIdx={selectedFileIdx}
-            handleFileDataChange={debounceDataFn}
-            vimConfig={vimConfig}
-          />
+          <div className="flex h-full items-center justify-center">
+            <div className="text-lg text-gray-300">
+              Open a note to get started
+            </div>
+          </div>
         )}
       </div>
     </div>
