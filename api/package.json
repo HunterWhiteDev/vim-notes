@@ -9,7 +9,7 @@
   "scripts": {
     "test": "npm run dev",
     "dev": "npm run push && tsx --watch index.ts",
-    "push": "npx drizzle-kit push",
+    "push": "npx drizzle-kit push --force",
     "studio": "npx drizzle-kit studio"
   },
   "dependencies": {
