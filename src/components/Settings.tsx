@@ -20,7 +20,7 @@ interface SettingsProps {
 
 export default function Settings({ selectedSettingIdx }: SettingsProps) {
   return (
-    <div className="h-full w-35 border-r border-b border-white text-white">
+    <div className="h-full">
       {settingsData.map(({ name, Icon, action }, idx: number) => (
         <Setting
           name={name}
