@@ -5,7 +5,7 @@ import db from "../../../drizzle/drizzle";
 import { vimTable } from "../../../drizzle/schema/vimConfig";
 import { eq } from "drizzle-orm";
 
-export default async function (req: Request, res: Response) {
+export default async function(req: Request, res: Response) {
   try {
     const session = await auth.api.getSession({
       headers: fromNodeHeaders(req.headers),
@@ -17,10 +17,23 @@ export default async function (req: Request, res: Response) {
     }
 
     const userId = session.user.id;
-    const response = await db
+    let response = await db
       .select({ content: vimTable.content })
       .from(vimTable)
       .where(eq(vimTable.user_id, userId));
+
+    if (response.length === 0) {
+      console.log("response does not exist");
+      response = await db
+        .insert(vimTable)
+        .values({ user_id: userId, content: "" })
+        .returning({
+          id: vimTable.id,
+          content: vimTable.content,
+          updated_at: vimTable.updated_at,
+          user_id: vimTable.user_id,
+        });
+    }
 
     res.status(200).send(response);
   } catch (error) {
