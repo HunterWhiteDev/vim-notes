@@ -6,7 +6,7 @@ COPY package.json .
 
 RUN npm install -g pnpm
 
-RUN pnpm install
+RUN pnpm install --dangerously-allow-all-builds
 
 RUN npm i -g serve
 
