@@ -9,7 +9,7 @@ RUN npm install -g tsx
 RUN npm install -g drizzle-kit
 RUN npm install -g drizzle-orm
 
-RUN npm install
+RUN pnpm install --dangerously-allow-all-builds
 
 COPY . .
 
