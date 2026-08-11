@@ -1,10 +1,4 @@
-import {
-  ChangeEventHandler,
-  RefObject,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import { EditorState } from "@codemirror/state";
 import {
   drawSelection,
@@ -14,7 +8,7 @@ import {
 } from "@codemirror/view";
 import markdownExt from "../extensions/markdown";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
-import { vim, Vim, getCM } from "@replit/codemirror-vim";
+import { vim, Vim } from "@replit/codemirror-vim";
 import darkTheme from "@/extensions/darkTheme";
 import onUpdate from "@/extensions/onUpdate";
 import { DebouncedFunc } from "lodash";
