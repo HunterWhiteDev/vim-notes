@@ -1,4 +1,6 @@
 import { EditorView } from "codemirror";
+const selectionElement = document.getElementsByClassName("cm-fat-cursor")[0];
+const rect = selectionElement?.getBoundingClientRect();
 
 //TODO: Fix cursor when editor is not focused showing pink outline or border
 const darkTheme = EditorView.theme({

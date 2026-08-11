@@ -1,4 +1,11 @@
-import { RefObject, useEffect, useRef, useState } from "react";
+import {
+  Dispatch,
+  RefObject,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { EditorState } from "@codemirror/state";
 import {
   drawSelection,
@@ -8,12 +15,15 @@ import {
 } from "@codemirror/view";
 import markdownExt from "../extensions/markdown";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { autocompletion, closeBrackets } from "@codemirror/autocomplete";
 import { vim, Vim } from "@replit/codemirror-vim";
 import darkTheme from "@/extensions/darkTheme";
 import onUpdate from "@/extensions/onUpdate";
 import { DebouncedFunc } from "lodash";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Note } from "./Home";
+import menuPlugin from "@/extensions/menu";
+import NotesPicker from "@/components/NotesPicker";
 
 interface EditorProps {
   editorRef: RefObject<EditorView | null>;
@@ -35,6 +45,7 @@ export default function Editor({
   const containerRef = useRef<any>(null);
   const [hasMounted, setHasMounted] = useState(false);
   const [useVim, setUseVim] = useState(true);
+  const [showNotesPicker, setShowNotesPicker] = useState(false);
 
   const initVim = (vimEnabled: boolean) => {
     let extensionsArr = [
@@ -46,6 +57,8 @@ export default function Editor({
       markdown({ base: markdownLanguage }),
       drawSelection(),
       darkTheme,
+      menuPlugin([setShowNotesPicker]),
+      closeBrackets(),
     ];
 
     if (vimEnabled) extensionsArr.push(vim());
@@ -92,6 +105,7 @@ export default function Editor({
 
   return (
     <div className="z-0!">
+      <NotesPicker showNotesPicker={showNotesPicker} />
       <div className="max-h-[96vh] overflow-scroll">
         <div ref={containerRef} className="cursor-text!"></div>
       </div>
