@@ -118,7 +118,7 @@ function decorations(view: EditorView) {
             const deco = Decoration.mark({
               tagName: "span",
               attributes: {
-                style: "font-size: 1.75rem",
+                style: "font-size: 1.85rem",
               },
             });
             const range = deco.range(node.from, node.to);
@@ -128,7 +128,7 @@ function decorations(view: EditorView) {
             const deco = Decoration.mark({
               tagName: "span",
               attributes: {
-                style: "font-size: 1.5rem",
+                style: "font-size: 1.7rem",
               },
             });
             const range = deco.range(node.from, node.to);
@@ -140,7 +140,7 @@ function decorations(view: EditorView) {
             const deco = Decoration.mark({
               tagName: "span",
               attributes: {
-                style: "font-size: 1.25rem",
+                style: "font-size: 1.55rem",
               },
             });
             const range = deco.range(node.from, node.to);
@@ -152,7 +152,7 @@ function decorations(view: EditorView) {
             const deco = Decoration.mark({
               tagName: "span",
               attributes: {
-                style: "font-size: 1rem",
+                style: "font-size: 1.3rem",
               },
             });
             const range = deco.range(node.from, node.to);
@@ -164,7 +164,7 @@ function decorations(view: EditorView) {
             const deco = Decoration.mark({
               tagName: "span",
               attributes: {
-                style: "font-size: 0.75rem",
+                style: "font-size: 1.15rem",
               },
             });
             const range = deco.range(node.from, node.to);
